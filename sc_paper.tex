@@ -96,7 +96,6 @@ any knowledge of this author's actions.}\\
        \email{frenchrd@ornl.gov}
 }
 
-\maketitle
 \begin{abstract}
 
 Smithy is a software compilation and installation tool that borrows ideas
@@ -120,31 +119,9 @@ via formulas written in Ruby.
 \keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
 
 \section{Introduction}
-The \textit{proceedings} are the records of a conference.
-ACM seeks to give these conference by-products a uniform,
-high-quality appearance.  To do this, ACM has some rigid
-requirements for the format of the proceedings documents: there
-is a specified format (balanced  double columns), a specified
-set of fonts (Arial or Helvetica and Times Roman) in
-certain specified sizes (for instance, 9 point for body copy),
-a specified live area (18 $\times$ 23.5 cm [7" $\times$ 9.25"]) centered on
-the page, specified size of margins (1.9 cm [0.75"]) top, (2.54 cm [1"]) bottom
-and (1.9 cm [.75"]) left and right; specified column width
-(8.45 cm [3.33"]) and gutter size (.83 cm [.33"]).
+The sane management of third-party software installation requests is a vital component of the user experience at any high-performance computing center. Users expect installation requests to be handled promptly, and for required software to be available on each computing resource they use. Unfortunately for the software czar, the disparity between computing resources can mean hours of work deducing appropriate configuration options, testing for correct behavior, or even crafting patches to support esoteric systems.
 
-The good news is, with only a handful of manual
-settings\footnote{Two of these, the {\texttt{\char'134 numberofauthors}}
-and {\texttt{\char'134 alignauthor}} commands, you have
-already used; another, {\texttt{\char'134 balancecolumns}}, will
-be used in your very last run of \LaTeX\ to ensure
-balanced column heights on the last page.}, the \LaTeX\ document
-class file handles all of this for you.
-
-The remainder of this document is concerned with showing, in
-the context of an ``actual'' document, the \LaTeX\ commands
-specifically available for denoting the structure of a
-proceedings paper, rather than with giving rigorous descriptions
-or explanations of such commands.
+SWTools\cite{Fahey} aided the software czar by providing tools and conventions to facilitate reproducible software builds. Information specific to the configuration of a build could be kept in \textit{rebuild scripts} that would house the information necessary to recompile and reinstall a package. However, SWTools is very specific in its aims: a single rebuild script supports one set of configuration options for a particular platform. This can be a hindrance, for example, for packages like Python Numpy, which can target multiple major versions of Python (2.X and 3.X) as well as multiple BLAS implementations. Supporting all combinations of Python and BLAS for a single compute resource can require many rebuild scripts, each only marginally dissimilar from the others.
 
 \section{The {\secit Body} of The Paper}
 Typically, the body of a paper is organized
