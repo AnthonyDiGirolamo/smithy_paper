@@ -95,37 +95,19 @@ any knowledge of this author's actions.}\\
        \affaddr{Oak Ridge, TN USA}\\
        \email{frenchrd@ornl.gov}
 }
-% There's nothing stopping you putting the seventh, eighth, etc.
-% author on the opening page (as the 'third row') but we ask,
-% for aesthetic reasons that you place these 'additional authors'
-% in the \additional authors block, viz.
-\additionalauthors{Additional authors: John Smith (The Th{\o}rv{\"a}ld Group,
-email: {\texttt{jsmith@affiliation.org}}) and Julius P.~Kumquat
-(The Kumquat Consortium, email: {\texttt{jpkumquat@consortium.net}}).}
-\date{30 July 1999}
-% Just remember to make sure that the TOTAL number of authors
-% is the number that will appear on the first page PLUS the
-% number that will appear in the \additionalauthors section.
 
 \maketitle
 \begin{abstract}
-This paper provides a sample of a \LaTeX\ document which conforms to
-the formatting guidelines for ACM SIG Proceedings.
-It complements the document \textit{Author's Guide to Preparing
-ACM SIG Proceedings Using \LaTeX$2_\epsilon$\ and Bib\TeX}. This
-source file has been written with the intention of being
-compiled under \LaTeX$2_\epsilon$\ and BibTeX.
 
-The developers have tried to include every imaginable sort
-of ``bells and whistles", such as a subtitle, footnotes on
-title, subtitle and authors, as well as in the text, and
-every optional component (e.g. Acknowledgments, Additional
-Authors, Appendices), not to mention examples of
-equations, theorems, tables and figures.
-
-To make best use of this sample document, run it through \LaTeX\
-and BibTeX, and compare this source code with the printed
-output produced by the dvi file.
+Smithy is a software compilation and installation tool that borrows ideas
+heavily from SWTools\cite{swtools} and the homebrew\cite{homebrew} package
+management system for Mac OS X.  Smithy is designed to manage many software
+builds within an HPC Linux environment using modulefiles to load software into a
+user's shell.  SWTools has set very good conventions for software installations
+at the NCCS.  Smithy's goal is to make following the SWtools conventions easier
+and less error prone.  Smithy improves upon SWTools by providing a simpler
+command line interface, modulefile generation and management, and installations
+via formulas written in Ruby.
 \end{abstract}
 
 % A category with the (minimum) three required fields
