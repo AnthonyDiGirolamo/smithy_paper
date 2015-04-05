@@ -1,31 +1,3 @@
-% THIS IS SIGPROC-SP.TEX - VERSION 3.1
-% WORKS WITH V3.2SP OF ACM_PROC_ARTICLE-SP.CLS
-% APRIL 2009
-%
-% It is an example file showing how to use the 'acm_proc_article-sp.cls' V3.2SP
-% LaTeX2e document class file for Conference Proceedings submissions.
-% ----------------------------------------------------------------------------------------------------------------
-% This .tex file (and associated .cls V3.2SP) *DOES NOT* produce:
-%       1) The Permission Statement
-%       2) The Conference (location) Info information
-%       3) The Copyright Line with ACM data
-%       4) Page numbering
-% ---------------------------------------------------------------------------------------------------------------
-% It is an example which *does* use the .bib file (from which the .bbl file
-% is produced).
-% REMEMBER HOWEVER: After having produced the .bbl file,
-% and prior to final submission,
-% you need to 'insert'  your .bbl file into your source .tex file so as to provide
-% ONE 'self-contained' source file.
-%
-% Questions regarding SIGS should be sent to
-% Adrienne Griscti ---> griscti@acm.org
-%
-% Questions/suggestions regarding the guidelines, .tex and .cls files, etc. to
-% Gerald Murray ---> murray@hq.acm.org
-%
-% For tracking purposes - this is V3.1SP - APRIL 2009
-
 \documentclass{acm_proc_article-sp}
 
 \begin{document}
@@ -37,46 +9,10 @@
 \textit{Author's Guide to Preparing ACM SIG Proceedings Using
 \LaTeX$2_\epsilon$\ and BibTeX} at
 \texttt{www.acm.org/eaddress.htm}}}
-%
-% You need the command \numberofauthors to handle the 'placement
-% and alignment' of the authors beneath the title.
-%
-% For aesthetic reasons, we recommend 'three authors at a time'
-% i.e. three 'name/affiliation blocks' be placed beneath the title.
-%
-% NOTE: You are NOT restricted in how many 'rows' of
-% "name/affiliations" may appear. We just ask that you restrict
-% the number of 'columns' to three.
-%
-% Because of the available 'opening page real-estate'
-% we ask you to refrain from putting more than six authors
-% (two rows with three columns) beneath the article title.
-% More than six makes the first-page appear very cluttered indeed.
-%
-% Use the \alignauthor commands to handle the names
-% and affiliations for an 'aesthetic maximum' of six authors.
-% Add names, affiliations, addresses for
-% the seventh etc. author(s) as the argument for the
-% \additionalauthors command.
-% These 'additional authors' will be output/set for you
-% without further effort on your part as the last section in
-% the body of your article BEFORE References or any Appendices.
 
 \numberofauthors{2} %  in this sample file, there are a *total*
-% of EIGHT authors. SIX appear on the 'first-page' (for formatting
-% reasons) and the remaining two appear in the \additionalauthors section.
 %
 \author{
-% You can go ahead and credit any number of authors here,
-% e.g. one 'row of three' or two rows (consisting of one row of three
-% and a second row of one, two or three).
-%
-% The command \alignauthor (no curly braces needed) should
-% precede each author name, affiliation/snail-mail address and
-% e-mail address. Additionally, tag each line of
-% affiliation/address with \affaddr, and tag the
-% e-mail address with \email.
-%
 % 1st. author
 \alignauthor
 Anthony DiGirolamo\titlenote{Dr.~Trovato insisted his name be first.}\\
@@ -125,6 +61,23 @@ SWTools\cite{Fahey} aided the software czar by providing tools and conventions t
 However, SWTools is very specific in its aims: a single rebuild script supports one set of configuration options for a particular platform. This can be a hindrance, for example, for packages like Python Numpy, which can target multiple major versions of Python (2.X and 3.X) as well as multiple BLAS implementations. Supporting all combinations of Python and BLAS for a single compute resource can require many rebuild scripts, each only marginally dissimilar from the others.
 
 Smithy improves over SWTools primarily in this regard. Drawing inspiration from Homebrew\cite{Homebrew}, a package manager for Mac OS X, Smithy encapsulates everything necessary for reproducible builds in a single ruby program called a ``formula''. Formulas can be written in a generalized fashion to support multiple software versions or build platorms; they can also be extended using ruby's ``concerns'' mechanism to support separate configurations per version or per platform when necessary.
+
+\section{Formulas}
+Smithy formulas are ruby programs that deduce platform-specific build settings based on an SWTools formatted build-name. Formulas manipulate the programming environment, and load and unload modules as appropriate. Formulas can express dependency requirements, and even generate modulefiles for newly installed packages.
+
+For example, when installing new packages, a build-name can be specified such as \texttt{python\_numpy/1.9.2/python2.7\_sles11.1\_acml}. This tells smithy to load the \texttt{python\_numpy} formula, and build version \texttt{1.9.2} targeting Python2.7 on SuSE Linux Enterprise Server version 11.1 using AMD Core Math Library. This is a suitable build-name for Titan, a Cray XK7 running SLES 11.1 with AMD Opteron CPUs.
+
+To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel Xeon CPUs, Smithy can be invoked with the build-name \texttt{python\_numpy/1.9.2/python2.7\_rhel6.5\_mkl}. Smithy will invoke the same \texttt{python\_numpy} formula as before, but this time targeting RHEL 6.5 and the Intel Math Kernel Library. 
+
+As the configuration options and strategy for building numpy are largely the same between these two cases, the specifics needed to handle each can be expressed in conditional blocks if they are simple, or in ``concerns'' if they are more complex. This allows the software czar to maintain portable build instructions for dissimilar platforms in a single file.
+
+A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by Homebrew formulas, is that they can be shared through public version-control hosting sites such as GitHub. HPC centers can choose to maintain their own formulas, pull changes downstream from the official Smithy formulas repository, or contribute additional imrovements upstream. 
+
+\section{Similar Efforts}
+
+Smithy is not the only tool aiming to facilitate portable software builds. Another fine utility is EasyBuild\cite{EasyBuild}. EasyBuild supports build settings for a wide variety of scientific applications, over 500 packages in total. The official Smithy formulas repository contains formulas for over 125 packages including PETSc, OpenMPI, NetCDF, Magma, a large collection of host-native Python modules including NumPy and SciPy, as well as several domain-specific packages such as LAMMPS, NAMD, and Gromacs. 
+
+While far short of the number boasted by EasyBuild, Smithy formulas excel over Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric platforms such as Crays, and since formulas are contained in a single file, they are much easier to write and maintain.
 
 \section{The {\secit Body} of The Paper}
 Typically, the body of a paper is organized
