@@ -32,8 +32,20 @@ any knowledge of this author's actions.}\\
        \email{frenchrd@ornl.gov}
 }
 
+\date{8 April 2015}
+
+\maketitle
+
 \begin{abstract}
-Smithy is a software compilation and installation tool that borrows ideas heavily from SWTools\cite{swtools} and the homebrew\cite{homebrew} package management system for Mac OS X.  Smithy is designed to manage many software builds within an HPC Linux environment using modulefiles to load software into a user's shell.  SWTools has set very good conventions for software installations at the NCCS.  Smithy's goal is to make following the SWtools conventions easier and less error prone.  Smithy improves upon SWTools by providing a simpler command line interface, modulefile generation and management, and installations via formulas written in Ruby.
+Smithy is a software compilation and installation tool that borrows ideas
+heavily from SWTools\cite{swtools} and the homebrew\cite{homebrew} package
+management system for Mac OS X.  Smithy is designed to manage many software
+builds within an HPC Linux environment using modulefiles to load software into a
+user's shell.  SWTools has set very good conventions for software installations
+at the NCCS.  Smithy's goal is to make following the SWtools conventions easier
+and less error prone.  Smithy improves upon SWTools by providing a simpler
+command line interface, modulefile generation and management, and installations
+via formulas written in Ruby.
 \end{abstract}
 
 % A category with the (minimum) three required fields
@@ -46,37 +58,101 @@ Smithy is a software compilation and installation tool that borrows ideas heavil
 \keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
 
 \section{Introduction}
-The sane management of third-party software installation requests is a vital component of the user experience at any high-performance computing center. Users expect installation requests to be handled promptly, and for required software to be available on each computing resource they use. Unfortunately for the software czar, the disparity between computing resources can mean hours of work deducing appropriate configuration options, testing for correct behavior, or even crafting patches to support esoteric systems.
+The sane management of third-party software installation requests is a vital
+component of the user experience at any high-performance computing center. Users
+expect installation requests to be handled promptly, and for required software
+to be available on each computing resource they use. Unfortunately for the
+software czar, the disparity between computing resources can mean hours of work
+deducing appropriate configuration options, testing for correct behavior, or
+even crafting patches to support esoteric systems.
 
-SWTools\cite{Fahey} aided the software czar by providing tools and conventions to facilitate reproducible software builds. Information specific to the configuration of a build could be kept in \textit{rebuild scripts} that would house the information necessary to recompile and reinstall a package. 
-However, SWTools is very specific in its aims: a single rebuild script supports one set of configuration options for a particular platform. This can be a hindrance, for example, for packages like Python Numpy, which can target multiple major versions of Python (2.X and 3.X) as well as multiple BLAS implementations. Supporting all combinations of Python and BLAS for a single compute resource can require many rebuild scripts, each only marginally dissimilar from the others.
+SWTools\cite{Fahey} aided the software czar by providing tools and conventions
+to facilitate reproducible software builds. Information specific to the
+configuration of a build could be kept in \textit{rebuild scripts} that would
+house the information necessary to recompile and reinstall a package.  However,
+SWTools is very specific in its aims: a single rebuild script supports one set
+of configuration options for a particular platform. This can be a hindrance, for
+example, for packages like Python Numpy, which can target multiple major
+versions of Python (2.X and 3.X) as well as multiple BLAS implementations.
+Supporting all combinations of Python and BLAS for a single compute resource can
+require many rebuild scripts, each only marginally dissimilar from the others.
 
-Smithy improves over SWTools primarily in this regard. Drawing inspiration from Homebrew\cite{Homebrew}, a package manager for Mac OS X, Smithy encapsulates everything necessary for reproducible builds in a single ruby program called a ``formula''. Formulas can be written in a generalized fashion to support multiple software versions or build platorms; they can also be extended using ruby's ``concerns'' mechanism to support separate configurations per version or per platform when necessary.
+Smithy improves over SWTools primarily in this regard. Drawing inspiration from
+Homebrew\cite{Homebrew}, a package manager for Mac OS X, Smithy encapsulates
+everything necessary for reproducible builds in a single ruby program called a
+``formula''. Formulas can be written in a generalized fashion to support
+multiple software versions or build platorms; they can also be extended using
+ruby's ``concerns'' mechanism to support separate configurations per version or
+per platform when necessary.
 
 \section{Formulas}
-Smithy formulas are ruby programs that deduce platform-specific build settings based on an SWTools formatted build-name. Formulas manipulate the programming environment, and load and unload modules as appropriate. Formulas can express dependency requirements, and even generate modulefiles for newly installed packages.
+Smithy formulas are ruby programs that deduce platform-specific build settings
+based on an SWTools formatted build-name. Formulas manipulate the programming
+environment, and load and unload modules as appropriate. Formulas can express
+dependency requirements, and even generate modulefiles for newly installed
+packages.
 
-For example, when installing new packages, a build-name can be specified such as \texttt{python\_numpy/1.9.2/python2.7\_sles11.1\_acml}. This tells smithy to load the \texttt{python\_numpy} formula, and build version \texttt{1.9.2} targeting Python2.7 on SuSE Linux Enterprise Server version 11.1 using AMD Core Math Library. This is a suitable build-name for Titan, a Cray XK7 running SLES 11.1 with AMD Opteron CPUs.
+For example, when installing new packages, a build-name can be specified such as
+\texttt{python\_numpy/1.9.2/python2.7\_sles11.1\_acml}. This tells smithy to
+load the \texttt{python\_numpy} formula, and build version \texttt{1.9.2}
+targeting Python2.7 on SuSE Linux Enterprise Server version 11.1 using AMD Core
+Math Library. This is a suitable build-name for Titan, a Cray XK7 running SLES
+11.1 with AMD Opteron CPUs.
 
-To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel Xeon CPUs, Smithy can be invoked with the build-name \texttt{python\_numpy/1.9.2/python2.7\_rhel6.5\_mkl}. Smithy will invoke the same \texttt{python\_numpy} formula as before, but this time targeting RHEL 6.5 and the Intel Math Kernel Library. 
+To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel
+Xeon CPUs, Smithy can be invoked with the build-name
+\texttt{python\_numpy/1.9.2/python2.7\_rhel6.5\_mkl}. Smithy will invoke the
+same \texttt{python\_numpy} formula as before, but this time targeting RHEL 6.5
+and the Intel Math Kernel Library.
 
-As the configuration options and strategy for building numpy are largely the same between these two cases, the specifics needed to handle each can be expressed in conditional blocks if they are simple, or in ``concerns'' if they are more complex. This allows the software czar to maintain portable build instructions for dissimilar platforms in a single file.
+As the configuration options and strategy for building numpy are largely the
+same between these two cases, the specifics needed to handle each can be
+expressed in conditional blocks if they are simple, or in ``concerns'' if they
+are more complex. This allows the software czar to maintain portable build
+instructions for dissimilar platforms in a single file.
 
-A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by Homebrew formulas, is that they can be shared through public version-control hosting sites such as GitHub. HPC centers can choose to maintain their own formulas, pull changes downstream from the official Smithy formulas repository, or contribute additional imrovements upstream. 
+A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by
+Homebrew formulas, is that they can be shared through public version-control
+hosting sites such as GitHub. HPC centers can choose to maintain their own
+formulas, pull changes downstream from the official Smithy formulas repository,
+or contribute additional imrovements upstream.
 
 \section{Similar Efforts}
 
-Smithy is not the only tool aiming to facilitate portable software builds. Another fine utility is EasyBuild\cite{EasyBuild}. EasyBuild supports build settings for a wide variety of scientific applications, over 500 packages in total. The official Smithy formulas repository contains formulas for over 125 packages including PETSc, OpenMPI, NetCDF, Magma, a large collection of host-native Python modules including NumPy and SciPy, as well as several domain-specific packages such as LAMMPS, NAMD, and Gromacs. 
+Smithy is not the only tool aiming to facilitate portable software builds.
+Another fine utility is EasyBuild\cite{EasyBuild}. EasyBuild supports build
+settings for a wide variety of scientific applications, over 500 packages in
+total. The official Smithy formulas repository contains formulas for over 125
+packages including PETSc, OpenMPI, NetCDF, Magma, a large collection of
+host-native Python modules including NumPy and SciPy, as well as several
+domain-specific packages such as LAMMPS, NAMD, and Gromacs.
 
-While far short of the number boasted by EasyBuild, Smithy formulas excel over Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric platforms such as Crays, and since formulas are contained in a single file, they are much easier to write and maintain.
+While far short of the number boasted by EasyBuild, Smithy formulas excel over
+Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric
+platforms such as Crays, and since formulas are contained in a single file, they
+are much easier to write and maintain.
 
 \section{Conclusions}
-Smithy formulas provide a self-contained encapsulation of all logic necessary to build multiple versions of a scientific software package for various resources, operating systems, and programming environments. A software czar employing smithy can support build requests for many disparate compute resources within the same center. The concise nature of the Ruby programming language allows formula authors to spare themselves the tedium of repetitive software build tasks. The Python- and Cray- specific helper methods provided by the Smithy Formula DSL facilitate dealing with the caveats of deploying software to these environments.
+Smithy formulas provide a self-contained encapsulation of all logic necessary to
+build multiple versions of a scientific software package for various resources,
+operating systems, and programming environments. A software czar employing
+smithy can support build requests for many disparate compute resources within
+the same center. The concise nature of the Ruby programming language allows
+formula authors to spare themselves the tedium of repetitive software build
+tasks. The Python- and Cray- specific helper methods provided by the Smithy
+Formula DSL facilitate dealing with the caveats of deploying software to these
+environments.
 
-Although Smithy does not support as many packages as EasyBuild at the time of writing, it is the authors' belief that Smithy's ease of adoption and rich feature set will HPC centers to collaborate, grow the number of packages, and maintain the existing ones.
+Although Smithy does not support as many packages as EasyBuild at the time of
+writing, it is the authors' belief that Smithy's ease of adoption and rich
+feature set will HPC centers to collaborate, grow the number of packages, and
+maintain the existing ones.
 
 \section{Acknowledgments}
-The authors would like to thank the US Department of Energy's Office of Science's Advanced Scientific Computing Research program. They really are some nice folks. We would also like to thank Robert Baratheon and Eddard Stark for their protection of the realm.
+The authors would like to thank the US Department of Energy's Office of
+Science's Advanced Scientific Computing Research program. They really are some
+nice folks. We would also like to thank Robert Baratheon and Eddard Stark for
+their protection of the realm.
 
 %
 % The following two commands are all you need in the
