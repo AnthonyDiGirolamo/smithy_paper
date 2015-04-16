@@ -1,5 +1,7 @@
 \documentclass{acm_proc_article-sp}
 
+% \usepackage{lstlisting}
+% \usepackage{minted}
 \usepackage{quoting}
 \quotingsetup{vskip=0pt}
 
@@ -65,20 +67,21 @@ The sane management of third-party software installation requests is a vital
 component of the user experience at any high-performance computing center. Users
 expect installation requests to be handled promptly, and for required software
 to be available on each computing resource they use. Unfortunately for the
-software czar, the disparity between computing resources can mean hours of work
-deducing appropriate configuration options, testing for correct behavior, or
-even crafting patches to support esoteric systems.
+software administrator, the disparity between computing resources can mean hours
+of work deducing appropriate configuration options, testing for correct
+behavior, or even crafting patches to support esoteric systems.
 
-SWTools\cite{swtools} aided the software czar by providing tools and conventions
-to facilitate reproducible software builds. Information specific to the
-configuration of a build could be kept in \textit{rebuild scripts} that would
-house the information necessary to recompile and reinstall a package.  However,
-SWTools is very specific in its aims: a single rebuild script supports one set
-of configuration options for a particular platform. This can be a hindrance, for
-example, for packages like Python Numpy, which can target multiple major
-versions of Python (2.X and 3.X) as well as multiple BLAS implementations.
-Supporting all combinations of Python and BLAS for a single compute resource can
-require many rebuild scripts, each only marginally dissimilar from the others.
+SWTools\cite{swtools} aided the software administrator by providing tools and
+conventions to facilitate reproducible software builds. Information specific to
+the configuration of a build could be kept in \textit{rebuild scripts} that
+would house the information necessary to recompile and reinstall a package.
+However, SWTools is very specific in its aims: a single rebuild script supports
+one set of configuration options for a particular platform. This can be a
+hindrance, for example, for packages like Python Numpy, which can target
+multiple major versions of Python (2.X and 3.X) as well as multiple BLAS
+implementations.  Supporting all combinations of Python and BLAS for a single
+compute resource can require many rebuild scripts, each only marginally
+dissimilar from the others.
 
 Smithy improves over SWTools primarily in this regard. Drawing inspiration from
 Homebrew\cite{homebrew}, a package manager for Mac OS X, Smithy encapsulates
@@ -91,27 +94,43 @@ per platform when necessary.
 \section{Formulas}
 
 Smithy formulas are ruby programs that deduce platform-specific build settings
-based on an SWTools formatted build-name. Formulas manipulate the programming
-environment, and load and unload modules as appropriate. Formulas can express
+based on an SWTools formatted target. Targets are formatted as
+\texttt{name/version/build\_name} and correspond to the directory structure used
+to install the software on the filesystem. Formulas manipulate the programming
+environment and load or unload modules as appropriate. Formulas can express
 dependency requirements, and even generate modulefiles for newly installed
 packages.
 
-For example, when installing new packages, a build-name can be specified such
+For example, when installing new packages, a target can be specified such
 as:
 
 \begin{quoting}
 \begin{verbatim}
 python_numpy/1.9.2/python2.7_sles11.1_acml
-this is a little test
-MultipleLinesYo
-multi_line_ftw
 \end{verbatim}
 \end{quoting}
 
 This tells smithy to load the \texttt{python\_numpy} formula, and build version
 \texttt{1.9.2} targeting Python2.7 on SuSE Linux Enterprise Server version 11.1
-using AMD Core Math Library. This is a suitable build-name for Titan, a Cray XK7
-running SLES 11.1 with AMD Opteron CPUs.
+using AMD Core Math Library. This is a suitable target for Titan, a Cray XK7
+running SLES 11.1 with AMD Opteron CPUs. For the above target the directory
+structure would look like:
+
+\begin{quoting}
+\begin{verbatim}
+/sw/xk7
+\___ python_numpy
+   \___ 1.9.2
+      \___ python2.7_sles11.1_acml
+         |--- bin
+         |--- lib
+         \___ source
+\end{verbatim}
+\end{quoting}
+
+The root location for all software installations is \texttt{/sw} and all
+software installations for Titan are installed under the \texttt{xk7}
+architecture subdirectory.
 
 To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel
 Xeon CPUs, Smithy can be invoked with the build-name:
@@ -122,9 +141,22 @@ python_numpy/1.9.2/python2.7_rhel6.5_mkl
 \end{verbatim}
 \end{quoting}
 
-Smithy will invoke the
-same \texttt{python\_numpy} formula as before, but this time targeting RHEL 6.5
-and the Intel Math Kernel Library.
+Which corresponds to the following directory structure:
+
+\begin{quoting}
+\begin{verbatim}
+/sw/rhea
+\___ python_numpy
+   \___ 1.9.2
+      \___ python2.7_rhel6.5_mkl
+         |--- bin
+         |--- lib
+         \___ source
+\end{verbatim}
+\end{quoting}
+
+Smithy will invoke the same \texttt{python\_numpy} formula as before, but this
+time targeting RHEL 6.5 and the Intel Math Kernel Library.
 
 As the configuration options and strategy for building numpy are largely the
 same between these two cases, the specifics needed to handle each can be
@@ -142,8 +174,9 @@ or contribute additional imrovements upstream.
 
 % \begin{figure}
 \begin{figure*} % 2 column span
+% \begin{lstlisting}[language=ruby]
+% \begin{minted}{ruby}
 \begin{verbatim}
-
 class GitFormula < Formula
   homepage "https://git-core.googlecode.com/"
   url      "https://github.com/git/git/archive/v2.3.2.tar.gz"
@@ -184,7 +217,9 @@ class GitFormula < Formula
     MODULEFILE
   end
 end
-\end{verbatim}
+% \end{verbatim}
+% \end{minted}
+% \end{lstlisting}
 \caption{Example Git Formula}
 \end{figure*}
 % \end{figure}
