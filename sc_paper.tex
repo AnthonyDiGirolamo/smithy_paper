@@ -1,10 +1,13 @@
 \documentclass{acm_proc_article-sp}
 
+\usepackage{quoting}
+\quotingsetup{vskip=0pt}
+
 \begin{document}
 
 \title{Improving Software Installation Techniques at the National Center for Computational Sciences at Oak Ridge National Laboratory: The Smithy software installation tool.}
 
-\subtitle{[Extended Abstract]}
+% \subtitle{[Extended Abstract]}
 % \titlenote{A full version of this paper is available as
 % \textit{Author's Guide to Preparing ACM SIG Proceedings Using
 % \LaTeX$2_\epsilon$\ and BibTeX} at
@@ -48,13 +51,13 @@ via formulas written in Ruby.
 \end{abstract}
 
 % A category with the (minimum) three required fields
-\category{H.4}{Information Systems Applications}{Miscellaneous}
+% \category{H.4}{Information Systems Applications}{Miscellaneous}
 %A category including the fourth, optional field follows...
-\category{D.2.8}{Software Engineering}{Metrics}[complexity measures, performance measures]
+% \category{D.2.8}{Software Engineering}{Metrics}[complexity measures, performance measures]
 
-\terms{Theory}
+% \terms{Theory}
 
-\keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
+% \keywords{ACM proceedings, \LaTeX, text tagging} % NOT required for Proceedings
 
 \section{Introduction}
 
@@ -93,16 +96,33 @@ environment, and load and unload modules as appropriate. Formulas can express
 dependency requirements, and even generate modulefiles for newly installed
 packages.
 
-For example, when installing new packages, a build-name can be specified such as
-\texttt{python\_numpy/1.9.2/python2.7\_sles11.1\_acml}. This tells smithy to
-load the \texttt{python\_numpy} formula, and build version \texttt{1.9.2}
-targeting Python2.7 on SuSE Linux Enterprise Server version 11.1 using AMD Core
-Math Library. This is a suitable build-name for Titan, a Cray XK7 running SLES
-11.1 with AMD Opteron CPUs.
+For example, when installing new packages, a build-name can be specified such
+as:
+
+\begin{quoting}
+\begin{verbatim}
+python_numpy/1.9.2/python2.7_sles11.1_acml
+this is a little test
+MultipleLinesYo
+multi_line_ftw
+\end{verbatim}
+\end{quoting}
+
+This tells smithy to load the \texttt{python\_numpy} formula, and build version
+\texttt{1.9.2} targeting Python2.7 on SuSE Linux Enterprise Server version 11.1
+using AMD Core Math Library. This is a suitable build-name for Titan, a Cray XK7
+running SLES 11.1 with AMD Opteron CPUs.
 
 To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel
-Xeon CPUs, Smithy can be invoked with the build-name
-\texttt{python\_numpy/1.9.2/python2.7\_rhel6.5\_mkl}. Smithy will invoke the
+Xeon CPUs, Smithy can be invoked with the build-name:
+
+\begin{quoting}
+\begin{verbatim}
+python_numpy/1.9.2/python2.7_rhel6.5_mkl
+\end{verbatim}
+\end{quoting}
+
+Smithy will invoke the
 same \texttt{python\_numpy} formula as before, but this time targeting RHEL 6.5
 and the Intel Math Kernel Library.
 
