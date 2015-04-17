@@ -94,6 +94,42 @@ multiple software versions or build platforms; they can also be extended using
 ruby's ``concerns'' mechanism to support separate configurations per version or
 per platform when necessary.
 
+\section{Installation and Configuration}
+
+Installation is a simple download and extract anywhere affair. Smithy comes
+bundled with its own x86, x86\_64, and Mac OS X builds of Ruby that will run on
+most machines.  See the releases page for download tar files at \\
+\href{http://github.com/AnthonyDiGirolamo/smithy/releases}{github.com/AnthonyDiGirolamo/smithy/releases}
+
+Smithy is designed to manage many software installations across many hosts and
+architectures. To support this it must be configured via a yaml formatted config
+file. As an example:
+
+\begin{quoting}
+\begin{minted}{yaml}
+---
+software-root: /sw
+hostname-architectures:
+  rhea:        redhat6
+  titan-login: xk7
+  titan-ext:   xk7
+file-group-name: ccsstaff
+formula-directories:
+- /sw/tools/smithy/formulas
+download-cache: /sw/sources
+\end{minted}
+\end{quoting}
+
+The above lines and many more configuration options are documented on the smithy
+manpage at \\
+\href{http://anthonydigirolamo.github.io/smithy/smithy.1.html}{(anthonydigirolamo.github.io/smithy/smithy.1.html)}.
+Notable are the \texttt{software-root} and \texttt{hostname-architectures}
+options. \texttt{software-root} is the root directory where all software will be
+installed. \texttt{hostname-architectures} maps machine hostnames to specific
+architecture directory names. For example when smithy is run on a machine with
+the hostname \texttt{titan-ext1} it will place installations within the
+\texttt{/sw/xk7} directory.
+
 \section{Formulas}
 
 Smithy formulas are Ruby programs that deduce platform-specific build settings.
@@ -176,10 +212,10 @@ or contribute additional improvements upstream.
 
 \subsection{Formula Basics}
 
-Formulas are written as Ruby classes and follow a simple structure.
-Formulas provide a domain specific language with the support of a full
-programming language. The structure of a formula is the same as a Ruby
-class. Here is a bare minimum example:
+Formulas are written as Ruby classes and follow a simple structure.  Formulas
+provide a domain specific language (DSL) with the support of a full programming
+language. The structure of a formula is the same as a Ruby class. Here is a bare
+minimum example:
 
 \begin{quoting}
 \begin{minted}{ruby}
@@ -205,9 +241,10 @@ smithy formula install example/1.2.3/gnu4.3.4
 \end{quoting}
 
 Assuming that this is run on Titan, smithy will download the
-\texttt{example-1.2.3.tar.gz}, check its md5 sum, extract it to
-\texttt{/sw/xk7/example/1.2.3/gnu4.3.4/source}, switch to that working
-directory, and run the commands specified via the \texttt{system} method. Namely:
+\texttt{example-1.2.3.tar.gz} from the supplied url, check its md5 sum, extract
+it to \texttt{/sw/xk7/example/1.2.3/gnu4.3.4/source}, switch to that working
+directory, and run the commands specified via the \texttt{system} method.
+Namely:
 
 \begin{quoting}
 \begin{minted}{sh}
@@ -217,16 +254,99 @@ make install
 \end{minted}
 \end{quoting}
 
+The \texttt{homepage}, \texttt{url}, and \texttt{md5} DSL methods take a string
+as their argument. The \texttt{def install...end} section is a Ruby method
+definition that will be run after Smithy extracts the software and sets up the
+shell environment. Inside that method any arbitrary Ruby code can be added to
+perform the installation. The \texttt{system} method will run shell commands and
+the \texttt{prefix} method is a string variable that Smithy will populate with
+the full installation path based on the target name supplied to the
+\texttt{smithy formula install} command.
+
 \subsection{Formula Helpers}
 
 Formulas have a wealth of additional helper features each of which is documented
-on the formula writing manpage located at
+on the formula writing manpage at \\
 \href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html}{(anthonydigirolamo.github.io/smithy/smithyformula.5.html)}.
 Here we will highlight some of the most useful ones.
 
-\subsubsection{\texttt{modulecommands}}
+\subsubsection{\texttt{concern for\_version()}}
+
+Concerns are used allow formulas to support multiple versions. When used, their
+contents will override the same methods defined at the root level of a formula
+class. To specify a concern for version 1.2.3 of a package add the following to
+a formula (replacing the comment with the methods you would like to override).
+
+\begin{quoting}
+\begin{minted}{ruby}
+concern for_version("1.2.3") do
+  included do
+    # override methods here
+  end
+end
+\end{minted}
+\end{quoting}
+
+Any formula DSL method can be overridden including \texttt{def install}.
+
+Here is an example of a python formula that supports version "2.7.9" and
+"3.4.3". The concern only overrides the download urls and md5s.
+
+\begin{quoting}
+\begin{minted}{ruby}
+class PythonFormula < Formula
+  homepage "www.python.org/"
+
+  depends_on "sqlite"
+
+  module_commands ["unload python"]
+
+  concern for_version("2.7.9") do
+    included do
+      url "https://www.python.org/"
+          "ftp/python/2.7.9/Python-2.7.9.tgz"
+      md5 "5eebcaa0030dc4061156d3429657fb83"
+    end
+  end
+
+  concern for_version("3.4.3") do
+    included do
+      url "https://www.python.org/"
+          "ftp/python/3.4.3/Python-3.4.3.tgz"
+      md5 "4281ff86778db65892c05151d5de738d"
+    end
+  end
+
+  def install
+    module_list
+    ENV["CPPFLAGS"] =
+      "-I#{sqlite.prefix}/include"
+    ENV["LDFLAGS"] =
+      "-L#{sqlite.prefix}/lib"
+    system "./configure --prefix=#{prefix}",
+           "--enable-shared"
+    system "make install"
+  end
+end
+\end{minted}
+\end{quoting}
+
+Using the above formula it is possible to install python with the following and
+smithy will download the correct tarball for each version:
+
+\begin{quoting}
+\begin{minted}{sh}
+smithy formula install python/2.7.9/sles11.3_gnu4.3.4
+smithy formula install python/3.4.3/sles11.3_gnu4.3.4
+\end{minted}
+\end{quoting}
+
+
+\subsubsection{\texttt{depends\_on}}
 \subsubsection{\texttt{module\_commands}}
 \subsubsection{\texttt{modulefile}}
+\subsubsection{\texttt{module\_build\_list}}
+\subsubsection{\texttt{python\_module\_build\_list}}
 
 \section{Similar Efforts}
 
