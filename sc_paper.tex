@@ -220,7 +220,7 @@ minimum example:
 
 \begin{quoting}
 \begin{minted}{ruby}
-class ExampleFormula do
+class ExampleFormula < Formula
   homepage "http://example.com"
   url "http://example.com/example-1.2.3.tar.gz"
   md5 "44d667c142d7cda120332623eab69f40"
@@ -914,7 +914,8 @@ class PythonNumpyFormula < Formula
       <%= python_module_build_list @package, @builds %>
       set PREFIX <%= @package.version_directory %>/$BUILD
 
-      set LUSTREPREFIX #{additional_software_roots.first}/#{arch}/<%= @package.name %>/<%= @package.version %>/$BUILD
+      set LUSTREPREFIX \
+        #{additional_software_roots.first}/#{arch}/<%= @package.name %>/<%= @package.version %>/$BUILD
 
       prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib
       prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib64
