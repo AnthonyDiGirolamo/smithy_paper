@@ -336,14 +336,202 @@ smithy will download the correct tarball for each version:
 
 \begin{quoting}
 \begin{minted}{sh}
-smithy formula install python/2.7.9/sles11.3_gnu4.3.4
-smithy formula install python/3.4.3/sles11.3_gnu4.3.4
+smithy formula install \\
+  python/2.7.9/sles11.3_gnu4.3.4
+smithy formula install \\
+  python/3.4.3/sles11.3_gnu4.3.4
 \end{minted}
 \end{quoting}
 
-
 \subsubsection{\texttt{depends\_on}}
+
+This method expects either a single string or an array of strings that define
+dependencies for this formula. Here are some examples:
+
+\begin{quoting}
+\begin{minted}{ruby}
+depends_on "curl"
+depends_on [
+  "cmake",
+  "qt",
+  "openssl",
+  "sqlite" ]
+\end{minted}
+\end{quoting}
+
+Using this method ensures that if a given dependency is not met smithy will
+abort the installation. It also provides a way to query dependent packages
+information within the install method later on. For example if you write
+\texttt{depends\_on "curl"} in your formula you gain access to an object named curl
+inside the install method. This allows you to do things like:
+
+\begin{quoting}
+\begin{minted}{ruby}
+system "./configure --prefix=#{prefix}",
+       "--with-curl=#{curl.prefix}"
+\end{minted}
+\end{quoting}
+
+In the above example \texttt{\#\{curl.prefix\}} is an example of a ruby
+interpolated string, everything between the \texttt{\#\{ \}} is ruby code.
+\texttt{curl.prefix} will return a string with the location curl is installed
+in.
+
+The strings passed to \texttt{depends\_on} are just the locations of installed
+software.  If you required a specific version of a dependency you could
+specify the version or build numbers of existing installed software. For
+example:
+
+\begin{quoting}
+\begin{minted}{ruby}
+depends_on [
+  "cmake/2.8.11.2/sles11.1_gnu4.3.4",
+  "qt/4.8.5",
+  "sqlite" ]
+\end{minted}
+\end{quoting}
+
+Assuming your software root is \texttt{/sw/xk7} smithy would look for the above
+software installs in \texttt{/sw/xk7/cmake/2.8.11.2/sles11.1\_gnu4.3.4}
+\texttt{/sw/xk7/qt/4.8.5/*} and \texttt{/sw/xk7/sqlite/*/*}. The wildcard
+\texttt{*} works similar to shell globbing. If you needed to install a python
+module that depends on a specific version of another python module you might
+use:
+
+\begin{quoting}
+\begin{minted}{ruby}
+depends_on [ "python/3.3.0",
+  "python_numpy/1.7.1/*python3.3.0*" ]
+\end{minted}
+\end{quoting}
+
+This would require a given formula to have access to both
+\texttt{/sw/xk7/python/3.3.0/*} and a python module with a build name that includes
+\texttt{python3.3.0} located at \texttt{/sw/x6/python\_numpy/1.7.1/*python3.3.0*}
+
+You may also need to specify dependencies conditionally upon the type of build
+you are performing. If you add the type of build to the \texttt{build\_name}
+when installing you can key off that to specify dependencies. Taking the python
+example further, lets extend it to support multiple versions of python. You can
+pass a ruby block to the \texttt{depends\_on} method to make it more dynamic.
+The syntax for this is:
+
+\begin{quoting}
+\begin{minted}{ruby}
+depends_on do
+  ...
+end
+\end{minted}
+\end{quoting}
+
+Any ruby code may go in here the last executed line of the block should be an
+array of strings containing the dependencies. Lets use a ruby case statement
+for this:
+
+\begin{quoting}
+\begin{minted}{ruby}
+depends_on do
+  case build_name
+  when /python3.3/
+    [ "python/3.3.0",
+      "python_numpy/1.7.1/*python3.3.0*" ]
+  when /python2.7/
+    [ "python/2.7.3",
+      "python_numpy/1.7.1/*python2.7.3*" ]
+  end
+end
+\end{minted}
+\end{quoting}
+
+In this example case statement switches on the \texttt{build\_name}. The
+\texttt{when /python3.3/} will be true if the \texttt{build\_name} contains the
+\texttt{python3.3}. The
+\texttt{/python3.3/} syntax is a regular expression.
+
+This allows the formula to set it's dependencies based off the type of build
+thats being performed. Lets say this formula is \texttt{python\_matplotlib}. You could
+run either of these commands to install it and expect the dependencies to be set
+correctly:
+
+\begin{quoting}
+\begin{minted}{sh}
+smithy formula install python_matplotlib/1.2.3/python3.3.0
+smithy formula install python_matplotlib/1.2.3/python2.7.3
+\end{minted}
+\end{quoting}
+
 \subsubsection{\texttt{module\_commands}}
+
+This method defines the module commands that must be run before \texttt{system}
+calls within the \texttt{def install} part of the modulefile. Similar to
+\texttt{depends\_on} it expects an array of strings with each string being a
+module command. For example:
+
+\begin{quoting}
+\begin{minted}{ruby}
+module_commands [ "load szip", "load hdf5" ]
+\end{minted}
+\end{quoting}
+
+A more complicated example:
+
+\begin{quoting}
+\begin{minted}{ruby}
+module_commands [
+  "unload PE-gnu PE-pgi PE-intel PE-cray",
+  "load PE-gnu",
+  "load cmake/2.8.11.2",
+  "load git",
+  "swap gcc gcc/4.7.1",
+  "swap ompi ompi/1.6.3"
+]
+\end{minted}
+\end{quoting}
+
+\texttt{module\_commands} also accepts ruby blocks the syntax for this is:
+
+\begin{quoting}
+\begin{minted}{ruby}
+module_commands do
+  ...
+end
+\end{minted}
+\end{quoting}
+
+This can be used to dynamically set which modules to load based on the
+\texttt{build\_name}. Here is an example that loads the correct python version:
+
+\begin{quoting}
+\begin{minted}{ruby}
+module_commands do
+  commands = [ "unload python" ]
+
+  case build_name
+  when /python3.3/
+    commands << "load python/3.3.0"
+  when /python2.7/
+    commands << "load python/2.7.3"
+  end
+
+  commands << "load python_numpy"
+  commands << "load szip"
+  commands << "load hdf5/1.8.8"
+  commands
+end
+\end{minted}
+\end{quoting}
+
+This block starts by creating a variable named \texttt{commands} as an array with a
+single item \texttt{"unload python"}. Next a case statement is used to determine which
+version of python we are compiling for. \texttt{commands << "load python/3.3.0"} will
+append \texttt{"load python/3.3.0"} to the end of the array.  After that, it appends a
+few more modules to load.  The last line of the block must be the array itself
+so that when the block is evaluated by smithy, it recieves the expected value.
+
+Assuming this is a formula for \texttt{python\_h5py} running \texttt{smithy
+formula install python\_h5py/2.1.3/python3.3} results in an array containing:
+\texttt{[ "unload python", "load python/3.3.0", "load python\_numpy", "load szip", "load hdf5/1.8.8" ]}
+
 \subsubsection{\texttt{modulefile}}
 \subsubsection{\texttt{module\_build\_list}}
 \subsubsection{\texttt{python\_module\_build\_list}}
