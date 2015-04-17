@@ -201,7 +201,8 @@ same between these two cases, the specifics needed to handle each can be
 expressed in conditional blocks if they are simple, or in ``concerns'' if they
 are more complex. This allows the software administrator to maintain portable
 build instructions for dissimilar platforms in a single file. See
-Figure~\ref{fig:PythonNumpyFormula1} and Figure~\ref{fig:PythonNumpyFormula2}
+Figure 2 and Figure 3
+% Figure~\ref{fig:PythonNumpyFormula1} and Figure~\ref{fig:PythonNumpyFormula2}
 for the complete \texttt{python\_numpy} formula.
 
 A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by
@@ -289,8 +290,8 @@ end
 
 Any formula DSL method can be overridden including \texttt{def install}.
 
-Here is an example of a python formula that supports version "2.7.9" and
-"3.4.3". The concern only overrides the download urls and md5s.
+Here is an example of a python formula that supports version ``2.7.9'' and
+``3.4.3''. This example only overrides the download url and md5.
 
 \begin{quoting}
 \begin{minted}{ruby}
@@ -392,8 +393,9 @@ depends_on [
 \end{quoting}
 
 Assuming your software root is \texttt{/sw/xk7} smithy would look for the above
-software installs in \texttt{/sw/xk7/cmake/2.8.11.2/sles11.1\_gnu4.3.4}
-\texttt{/sw/xk7/qt/4.8.5/*} and \texttt{/sw/xk7/sqlite/*/*}. The wildcard
+software installs in \\
+\texttt{/sw/xk7/cmake/2.8.11.2/sles11.1\_gnu4.3.4}, \\
+~\texttt{/sw/xk7/qt/4.8.5/*}, and \texttt{/sw/xk7/sqlite/*/*}. The wildcard
 \texttt{*} works similar to shell globbing. If you needed to install a python
 module that depends on a specific version of another python module you might
 use:
@@ -407,7 +409,8 @@ depends_on [ "python/3.3.0",
 
 This would require a given formula to have access to both
 \texttt{/sw/xk7/python/3.3.0/*} and a python module with a build name that includes
-\texttt{python3.3.0} located at \texttt{/sw/x6/python\_numpy/1.7.1/*python3.3.0*}
+\texttt{python3.3.0} located at \\
+\texttt{/sw/x6/python\_numpy/1.7.1/*python3.3.0*}
 
 You may also need to specify dependencies conditionally upon the type of build
 you are performing. If you add the type of build to the \texttt{build\_name}
@@ -419,7 +422,7 @@ The syntax for this is:
 \begin{quoting}
 \begin{minted}{ruby}
 depends_on do
-  ...
+  # ...
 end
 \end{minted}
 \end{quoting}
@@ -455,8 +458,10 @@ correctly:
 
 \begin{quoting}
 \begin{minted}{sh}
-smithy formula install python_matplotlib/1.2.3/python3.3.0
-smithy formula install python_matplotlib/1.2.3/python2.7.3
+smithy formula install \\
+  python_matplotlib/1.2.3/python3.3.0
+smithy formula install \\
+  python_matplotlib/1.2.3/python2.7.3
 \end{minted}
 \end{quoting}
 
@@ -493,7 +498,7 @@ module_commands [
 \begin{quoting}
 \begin{minted}{ruby}
 module_commands do
-  ...
+  # ...
 end
 \end{minted}
 \end{quoting}
@@ -523,28 +528,179 @@ end
 
 This block starts by creating a variable named \texttt{commands} as an array with a
 single item \texttt{"unload python"}. Next a case statement is used to determine which
-version of python we are compiling for. \texttt{commands << "load python/3.3.0"} will
+version of python we are compiling for. \mintinline{ruby}{commands << "load python/3.3.0"} will
 append \texttt{"load python/3.3.0"} to the end of the array.  After that, it appends a
 few more modules to load.  The last line of the block must be the array itself
 so that when the block is evaluated by smithy, it recieves the expected value.
 
 Assuming this is a formula for \texttt{python\_h5py} running \texttt{smithy
 formula install python\_h5py/2.1.3/python3.3} results in an array containing:
-\texttt{[ "unload python", "load python/3.3.0", "load python\_numpy", "load szip", "load hdf5/1.8.8" ]}
+
+\begin{quoting}
+\begin{minted}{ruby}
+[ "unload python",
+  "load python/3.3.0",
+  "load python\_numpy",
+  "load szip",
+  "load hdf5/1.8.8" ]
+\end{minted}
+\end{quoting}
 
 \subsubsection{\texttt{modulefile}}
+
+The modulefile command provides a way to define a complete modulefile within the
+formula itself. It's recommended to have one modulefile per application and version combination.
+
+Writing modulefiles is a topic in and of itself. For details on the modulefile
+format see the
+\href{http://modules.sourceforge.net/man/modulefile.html}{modulefile manpage}
+Modulefiles are written in tcl and can take many forms.
+
+Here is an example of a modulefile that points to a single build:
+
+\begin{quoting}[leftmargin=0pt]
+\begin{minted}{ruby}
+modulefile <<-MODULEFILE
+  #%Module
+  proc ModulesHelp { } {
+    puts stderr \
+    "<%= @package.name %> <%= @package.version %>"
+    puts stderr ""
+  }
+  module-whatis \
+    "<%= @package.name %> <%= @package.version %>"
+
+  set PREFIX <%= @package.prefix %>
+
+  prepend-path PATH            $PREFIX/bin
+  prepend-path LD_LIBRARY_PATH $PREFIX/lib
+  prepend-path MANPATH         $PREFIX/share/man
+MODULEFILE
+\end{minted}
+\end{quoting}
+
+The \mintinline{ruby}{<<-MODULEFILE} syntax denotes the beginning of a
+multi-line string. The string ends with \texttt{MODULEFILE}. You can substitute
+any word for \texttt{MODULEFILE}.
+
+The modulefile definition uses the \href{http://ruby-doc.org/stdlib-2.0/libdoc/erb/rdoc/ERB.html}{erb
+format}. Anything
+between the \mintinline{erb}{<%= ... %>} delimiters will be interpreted as ruby code. There are
+a few helper methods that you can use inside these delimiters see the
+\href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html}{Modulefile
+Helper Methods section of the smithyformula manpage}.
+Modulefile Helper Methods section of the smithyformula manpage for details.
+
+A more complicated modulefile may examine a user's programming environment to
+determine which build to load. For instance if the user has gcc or a gnu
+programming environment module loaded then your modulefile will want to load the
+build compiled with the gcc compiler.  Here is an example designed to
+dynamically set the build:
+
+\begin{quoting}[leftmargin=0pt]
+\begin{minted}{erb}
+#%Module
+proc ModulesHelp { } {
+  puts stderr \
+  "<%= @package.name %> <%= @package.version %>"
+  puts stderr ""
+}
+# One line description
+module-whatis \
+  "<%= @package.name %> <%= @package.version %>"
+
+<% if @builds.size > 1 %>
+<%= module_build_list @package, @builds %>
+
+set PREFIX \
+  <%= @package.version_directory %>/$BUILD
+<% else %>
+set PREFIX <%= @package.prefix %>
+<% end %>
+
+# Helpful ENV Vars
+setenv <%= @package.name.upcase %>_DIR \
+  $PREFIX
+setenv <%= @package.name.upcase %>_LIB \
+  "-L$PREFIX/lib"
+setenv <%= @package.name.upcase %>_INC \
+  "-I$PREFIX/include"
+
+# Common Paths
+prepend-path PATH            $PREFIX/bin
+prepend-path LD_LIBRARY_PATH $PREFIX/lib
+prepend-path MANPATH         $PREFIX/share/man
+prepend-path INFOPATH        $PREFIX/info
+prepend-path PKG_CONFIG_PATH $PREFIX/lib/pkgconfig
+\end{minted}
+\end{quoting}
+
+The main difference from the first example is the \\
+\mintinline{erb}{<%= if @builds.size > 1 %>}
+block. This basically checks to see if we have installed multiple builds or
+not. If that condition is true everything up until the
+\mintinline{erb}{<% else %>}
+will be put
+in the modulefile including the output from the \\
+\texttt{module\_build\_list}
+method. Otherwise, if we have only one build, \mintinline{erb}{set PREFIX <%= @package.prefix %>} will be put in the
+  modulefile.
+
 \subsubsection{\texttt{module\_build\_list}}
-\subsubsection{\texttt{python\_module\_build\_list}}
+
+This is a helper method that will generate the TCL necessary to conditionally
+load builds based on what compiler programming environment modules a user has
+loaded. It takes \texttt{@package} and \texttt{@builds} as arguments. Here is
+an example of the output generated for a package installed with the following
+builds:
+
+\begin{quoting}[leftmargin=0pt]
+\begin{minted}{sh}
+smithy formula install bzip2/1.0.4/gnu4.3.4
+smithy formula install bzip2/1.0.4/gnu4.7.2
+smithy formula install bzip2/1.0.4/pgi13.4
+smithy formula install bzip2/1.0.4/intel12
+\end{minted}
+\end{quoting}
+
+\begin{quoting}[leftmargin=0pt]
+\begin{minted}{tcl}
+if [ is-loaded PrgEnv-gnu ] {
+  if [ is-loaded gcc/4.3.4 ] {
+    set BUILD gnu4.3.4
+  } elseif [ is-loaded gcc/4.7.2 ] {
+    set BUILD gnu4.7.2
+  } else {
+    set BUILD gnu4.7.2
+  }
+} elseif [ is-loaded PrgEnv-pgi ] {
+  set BUILD pgi13.4
+} elseif [ is-loaded PrgEnv-intel ] {
+  set BUILD intel12
+}
+if {![info exists BUILD]} {
+  puts stderr "[module-info name] is only
+  available for the following environments:"
+  puts stderr "gnu4.3.4"
+  puts stderr "gnu4.7.2"
+  puts stderr "intel12"
+  puts stderr "pgi13.4"
+  break
+}
+\end{minted}
+\end{quoting}
 
 \section{Similar Efforts}
 
 Smithy is not the only tool aiming to facilitate portable software builds.
 Another fine utility is EasyBuild\cite{EasyBuild}. EasyBuild supports build
 settings for a wide variety of scientific applications, over 500 packages in
-total. The official Smithy formulas repository contains formulas for over 125
-packages including PETSc, OpenMPI, NetCDF, Magma, a large collection of
-host-native Python modules including NumPy and SciPy, as well as several
-domain-specific packages such as LAMMPS, NAMD, and Gromacs.
+total. The official Smithy formulas repository \\
+\href{http://github.com/AnthonyDiGirolamo/smithy\_formulas}{(github.com/AnthonyDiGirolamo/smithy\_formulas)}
+contains formulas for over 150 packages written by multiple staff memebers
+including PETSc, OpenMPI, NetCDF, Magma, a large collection of host-native
+Python modules including NumPy and SciPy, as well as several domain-specific
+packages such as LAMMPS, NAMD, and Gromacs.
 
 While far short of the number boasted by EasyBuild, Smithy formulas excel over
 Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric
@@ -555,18 +711,17 @@ are much easier to write and maintain.
 
 Smithy formulas provide a self-contained encapsulation of all logic necessary to
 build multiple versions of a scientific software package for various resources,
-operating systems, and programming environments. A software czar employing
-smithy can support build requests for many disparate compute resources within
-the same center. The concise nature of the Ruby programming language allows
-formula authors to spare themselves the tedium of repetitive software build
-tasks. The Python- and Cray- specific helper methods provided by the Smithy
-Formula DSL facilitate dealing with the caveats of deploying software to these
-environments.
+operating systems, and programming environments. A software administrator
+employing smithy can support build requests for many disparate compute resources
+within the same center. The concise nature of the Ruby programming language
+allows formula authors to spare themselves the tedium of repetitive software
+build tasks. The formula helper methods provided by the Smithy formula DSL
+facilitate dealing with the caveats of deploying software to these environments.
 
 Although Smithy does not support as many packages as EasyBuild at the time of
 writing, it is the authors' belief that Smithy's ease of adoption and rich
-feature set will HPC centers to collaborate, grow the number of packages, and
-maintain the existing ones.
+feature set will allow HPC centers to collaborate, grow the number of packages,
+and maintain the existing ones.
 
 \section{Acknowledgments}
 
