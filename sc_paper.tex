@@ -96,16 +96,15 @@ per platform when necessary.
 
 \section{Formulas}
 
-Smithy formulas are ruby programs that deduce platform-specific build settings
-based on an SWTools formatted target. Targets are formatted as
-\texttt{name/version/build\_name} and correspond to the directory structure used
-to install the software on the filesystem. Formulas manipulate the programming
-environment and load or unload modules as appropriate. Formulas can express
-dependency requirements, and even generate modulefiles for newly installed
-packages.
+Smithy formulas are Ruby programs that deduce platform-specific build settings.
+They can manipulate the programming environment and load or unload modules as
+appropriate. Formulas can express dependency requirements, and even generate
+modulefiles for newly installed packages.
 
-For example, when installing new packages, a target can be specified such
-as:
+Formulas are installed with an SWTools target name. Targets are formatted as
+\texttt{name/version/build\_name} and correspond to the directory structure used
+to install the software on the filesystem.  For example a target can be
+specified such as:
 
 \begin{quoting}
 \begin{verbatim}
@@ -116,8 +115,8 @@ python_numpy/1.9.2/python2.7_sles11.1_acml
 This tells smithy to load the \texttt{python\_numpy} formula, and build version
 \texttt{1.9.2} targeting Python2.7 on SuSE Linux Enterprise Server version 11.1
 using AMD Core Math Library. This is a suitable target for Titan, a Cray XK7
-running SLES 11.1 with AMD Opteron CPUs. For the above target the directory
-structure would look like:
+running SLES 11.1 with AMD Opteron CPUs. When installed Smithy will layout the
+directory structure for the above target as:
 
 \begin{quoting}
 \begin{verbatim}
@@ -136,7 +135,7 @@ software installations for Titan are installed under the \texttt{xk7}
 architecture subdirectory.
 
 To install NumPy on Rhea, an NCCS analysis cluster running RedHat 6.5 on Intel
-Xeon CPUs, Smithy can be invoked with the build-name:
+Xeon CPUs, Smithy can be invoked with the target:
 
 \begin{quoting}
 \begin{verbatim}
@@ -165,8 +164,9 @@ As the configuration options and strategy for building numpy are largely the
 same between these two cases, the specifics needed to handle each can be
 expressed in conditional blocks if they are simple, or in ``concerns'' if they
 are more complex. This allows the software administrator to maintain portable
-build instructions for dissimilar platforms in a single file. See Figure 1. for
-the complete \texttt{python\_numpy} formula.
+build instructions for dissimilar platforms in a single file. See
+Figure~\ref{fig:PythonNumpyFormula1} and Figure~\ref{fig:PythonNumpyFormula2}
+for the complete \texttt{python\_numpy} formula.
 
 A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by
 Homebrew formulas, is that they can be shared through public version-control
@@ -174,186 +174,59 @@ hosting sites such as GitHub. HPC centers can choose to maintain their own
 formulas, pull changes downstream from the official Smithy formulas repository,
 or contribute additional improvements upstream.
 
-\section{Example Formulas}
+\subsection{Formula Basics}
 
-% \begin{figure}
-\begin{figure*} % 2 column span
-% \begin{lstlisting}[language=ruby]
-% \begin{verbatim}
-\begin{minted}[linenos]{ruby}
-class GitFormula < Formula
-  homepage "https://git-core.googlecode.com/"
-  url      "https://github.com/git/git/archive/v2.3.2.tar.gz"
-  sha256   "7d8e15a2f41b8d6c391e527f461d61027cf3391c9ccc89b8c1a1a0785f18a0fb"
+Formulas are written as Ruby classes and follow a simple structure.
+Formulas provide a domain specific language with the support of a full
+programming language. The structure of a formula is the same as a Ruby
+class. Here is a bare minimum example:
 
-  depends_on ["curl/7.39.0", "zlib"]
+\begin{quoting}
+\begin{minted}{ruby}
+class ExampleFormula do
+  homepage "http://example.com"
+  url "http://example.com/example-1.2.3.tar.gz"
+  md5 "44d667c142d7cda120332623eab69f40"
 
   def install
-    module_list
-    system "make configure"
-    system "./configure --prefix=#{prefix}",
-           "--with-curl=#{curl.prefix}",
-           "--with-zlib=#{zlib.prefix}"
+    system "./configure --prefix=#{prefix}"
     system "make install"
-
-    system "mkdir -p #{prefix}/share/man"
-    system "curl -O",
-      "https://www.kernel.org/pub/software/scm/git/git-manpages-2.3.2.tar.gz"
-    system "cd #{prefix}/share/man && ",
-      "tar xf #{prefix}/source/git-manpages-2.3.2.tar.gz"
-  end
-
-  modulefile do
-    <<-MODULEFILE
-      #%Module
-      proc ModulesHelp { } {
-         puts stderr "<%= @package.name %> <%= @package.version %>"
-         puts stderr ""
-      }
-      # One line description
-      module-whatis "<%= @package.name %> <%= @package.version %>"
-
-      set PREFIX <%= @package.prefix_directory %>
-
-      prepend-path PATH      $PREFIX/bin
-      prepend-path PERL5LIB  $PREFIX/lib64/perl5/site_perl
-      prepend-path MANPATH   $PREFIX/share/man
-      setenv       GITDIR    $PREFIX
-    MODULEFILE
   end
 end
 \end{minted}
-\caption{Example Git Formula}
-\label{fig:GitFormula}
-\end{figure*}
+\end{quoting}
 
-\begin{figure*}[p] % 2 column span
-\begin{minted}[linenos]{ruby}
-class PythonNumpyFormula < Formula
-  homepage "http://www.numpy.org/"
-  additional_software_roots [ config_value("lustre-software-root").fetch(hostname) ]
+This formula can be installed by running:
 
-  supported_build_names /python.*_gnu.*/
-
-  concern for_version("1.8.0") do
-    included do
-      url "http://downloads.sourceforge.net/project/numpy/NumPy/1.8.0/numpy-1.8.0.tar.gz"
-    end
-  end
-
-  concern for_version("1.9.2") do
-    included do
-      url "http://downloads.sourceforge.net/project/numpy/NumPy/1.9.2/numpy-1.9.2.tar.gz"
-    end
-  end
-
-  depends_on do
-    [ python_module_from_build_name, "cblas/20110120/*acml*" ]
-  end
-
-  module_commands do
-    pe = "PE-"
-    pe = "PrgEnv-" if cray_system?
-
-    commands = [ "unload #{pe}gnu #{pe}pgi #{pe}cray #{pe}intel" ]
-    commands << "load #{pe}gnu"
-    commands << "swap gcc gcc/#{$1}" if build_name =~ /gnu([\d\.]+)/
-
-    commands << "load acml"
-    commands << "unload python"
-    commands << "load #{python_module_from_build_name}"
-
-    commands
-  end
-
-  def install
-    module_list
-
-    acml_prefix = module_environment_variable("acml", "ACML_BASE_DIR")
-    acml_prefix += "/gfortran64"
-
-    FileUtils.mkdir_p "#{prefix}/lib"
-    FileUtils.cp "#{cblas.prefix}/lib/libcblas.a", "#{prefix}/lib", verbose: true
-    FileUtils.cp "#{acml_prefix}/lib/libacml.a",   "#{prefix}/lib", verbose: true
-    FileUtils.cp "#{acml_prefix}/lib/libacml.so",  "#{prefix}/lib", verbose: true
-
-    ENV['CC']  = 'gcc'
-    ENV['CXX'] = 'g++'
-    ENV['OPT'] = '-O3 -funroll-all-loops'
+\begin{quoting}
+\begin{minted}{sh}
+smithy formula install example/1.2.3/gnu4.3.4
 \end{minted}
-\label{fig:PythonNumpyFormula}
-\caption{Example Python NumPy Formula (1 of 2)}
-\end{figure*}
+\end{quoting}
 
-\begin{figure*}[p]
-\begin{minted}[linenos,firstnumber=52]{ruby}
-    File.open("site.cfg", "w+") do |f|
-      f.write <<-EOF.strip_heredoc
-        [blas]
-        blas_libs = cblas, acml
-        library_dirs = #{prefix}/lib
-        include_dirs = #{cblas.prefix}/include
+Assuming that this is run on Titan, smithy will download the
+\texttt{example-1.2.3.tar.gz}, check its md5 sum, extract it to
+\texttt{/sw/xk7/example/1.2.3/gnu4.3.4/source}, switch to that working
+directory, and run the commands specified via the \texttt{system} method. Namely:
 
-        [lapack]
-        language = f77
-        lapack_libs = acml
-        library_dirs = #{acml_prefix}/lib
-        include_dirs = #{acml_prefix}/include
-
-        [fftw]
-        libraries = fftw3
-        library_dirs = /opt/fftw/3.3.0.1/x86_64/lib
-        include_dirs = /opt/fftw/3.3.0.1/x86_64/include
-      EOF
-    end
-
-    system "cat site.cfg"
-
-    system_python "setup.py build"
-    system_python "setup.py install --prefix=#{prefix} --compile"
-  end
-
-  modulefile do
-    <<-MODULEFILE
-      #%Module
-      proc ModulesHelp { } {
-         puts stderr "<%= @package.name %> <%= @package.version %>"
-         puts stderr ""
-      }
-      # One line description
-      module-whatis "<%= @package.name %> <%= @package.version %>"
-
-      prereq PrgEnv-gnu PE-gnu
-      prereq python
-      conflict python_numpy
-
-      <%= python_module_build_list @package, @builds %>
-      set PREFIX <%= @package.version_directory %>/$BUILD
-
-      set LUSTREPREFIX #{additional_software_roots.first}/#{arch}/<%= @package.name %>/<%= @package.version %>/$BUILD
-
-      prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib
-      prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib64
-      prepend-path PYTHONPATH      $LUSTREPREFIX/lib/$LIBDIR/site-packages
-      prepend-path PYTHONPATH      $LUSTREPREFIX/lib64/$LIBDIR/site-packages
-
-      prepend-path PATH            $PREFIX/bin
-      prepend-path LD_LIBRARY_PATH $PREFIX/lib
-      prepend-path LD_LIBRARY_PATH $PREFIX/lib64
-      prepend-path LD_LIBRARY_PATH /opt/gcc/4.8.2/snos/lib64
-      prepend-path LD_LIBRARY_PATH /ccs/compilers/gcc/rhel6-x86_64/4.8.2/lib
-      prepend-path LD_LIBRARY_PATH /ccs/compilers/gcc/rhel6-x86_64/4.8.2/lib64
-      prepend-path MANPATH         $PREFIX/share/man
-
-      prepend-path PYTHONPATH      $PREFIX/lib/$LIBDIR/site-packages
-      prepend-path PYTHONPATH      $PREFIX/lib64/$LIBDIR/site-packages
-    MODULEFILE
-  end
-end
+\begin{quoting}
+\begin{minted}{sh}
+./configure \\
+  --prefix=/sw/xk7/example/1.2.3/gnu4.3.4
+make install
 \end{minted}
-\caption{Example Python NumPy Formula (2 of 2)}
-\end{figure*}
+\end{quoting}
 
+\subsection{Formula Helpers}
+
+Formulas have a wealth of additional helper features each of which is documented
+on the formula writing manpage located at
+\href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html}{(anthonydigirolamo.github.io/smithy/smithyformula.5.html)}.
+Here we will highlight some of the most useful ones.
+
+\subsubsection{\texttt{modulecommands}}
+\subsubsection{\texttt{module\_commands}}
+\subsubsection{\texttt{modulefile}}
 
 \section{Similar Efforts}
 
@@ -424,5 +297,183 @@ and formula writing
 % Homebrew. brew.sh. Retrieved December, 2013 from http://brew.sh/
 
 % \end{thebibliography}
+
+\appendix
+
+\begin{figure*} % 2 column span
+\begin{minted}[linenos]{ruby}
+class GitFormula < Formula
+  homepage "https://git-core.googlecode.com/"
+  url      "https://github.com/git/git/archive/v2.3.2.tar.gz"
+  sha256   "7d8e15a2f41b8d6c391e527f461d61027cf3391c9ccc89b8c1a1a0785f18a0fb"
+
+  depends_on ["curl/7.39.0", "zlib"]
+
+  def install
+    module_list
+    system "make configure"
+    system "./configure --prefix=#{prefix}",
+           "--with-curl=#{curl.prefix}",
+           "--with-zlib=#{zlib.prefix}"
+    system "make install"
+
+    system "mkdir -p #{prefix}/share/man"
+    system "curl -O",
+      "https://www.kernel.org/pub/software/scm/git/git-manpages-2.3.2.tar.gz"
+    system "cd #{prefix}/share/man && ",
+      "tar xf #{prefix}/source/git-manpages-2.3.2.tar.gz"
+  end
+
+  modulefile do
+    <<-MODULEFILE
+      #%Module
+      proc ModulesHelp { } {
+         puts stderr "<%= @package.name %> <%= @package.version %>"
+         puts stderr ""
+      }
+      # One line description
+      module-whatis "<%= @package.name %> <%= @package.version %>"
+
+      set PREFIX <%= @package.prefix_directory %>
+
+      prepend-path PATH      $PREFIX/bin
+      prepend-path PERL5LIB  $PREFIX/lib64/perl5/site_perl
+      prepend-path MANPATH   $PREFIX/share/man
+      setenv       GITDIR    $PREFIX
+    MODULEFILE
+  end
+end
+\end{minted}
+\caption{Example Git Formula}
+\label{fig:GitFormula}
+\end{figure*}
+
+\begin{figure*} % 2 column span
+\begin{minted}[linenos]{ruby}
+class PythonNumpyFormula < Formula
+  homepage "http://www.numpy.org/"
+  additional_software_roots [ config_value("lustre-software-root").fetch(hostname) ]
+
+  supported_build_names /python.*_gnu.*/
+
+  concern for_version("1.8.0") do
+    included do
+      url "http://downloads.sourceforge.net/project/numpy/NumPy/1.8.0/numpy-1.8.0.tar.gz"
+    end
+  end
+
+  concern for_version("1.9.2") do
+    included do
+      url "http://downloads.sourceforge.net/project/numpy/NumPy/1.9.2/numpy-1.9.2.tar.gz"
+    end
+  end
+
+  depends_on do
+    [ python_module_from_build_name, "cblas/20110120/*acml*" ]
+  end
+
+  module_commands do
+    pe = "PE-"
+    pe = "PrgEnv-" if cray_system?
+
+    commands = [ "unload #{pe}gnu #{pe}pgi #{pe}cray #{pe}intel" ]
+    commands << "load #{pe}gnu"
+    commands << "swap gcc gcc/#{$1}" if build_name =~ /gnu([\d\.]+)/
+
+    commands << "load acml"
+    commands << "unload python"
+    commands << "load #{python_module_from_build_name}"
+
+    commands
+  end
+
+  def install
+    module_list
+
+    acml_prefix = module_environment_variable("acml", "ACML_BASE_DIR")
+    acml_prefix += "/gfortran64"
+
+    FileUtils.mkdir_p "#{prefix}/lib"
+    FileUtils.cp "#{cblas.prefix}/lib/libcblas.a", "#{prefix}/lib", verbose: true
+    FileUtils.cp "#{acml_prefix}/lib/libacml.a",   "#{prefix}/lib", verbose: true
+    FileUtils.cp "#{acml_prefix}/lib/libacml.so",  "#{prefix}/lib", verbose: true
+
+    ENV['CC']  = 'gcc'
+    ENV['CXX'] = 'g++'
+    ENV['OPT'] = '-O3 -funroll-all-loops'
+\end{minted}
+\label{fig:PythonNumpyFormula1}
+\caption{Example Python NumPy Formula (1 of 2)}
+\end{figure*}
+
+\begin{figure*}
+\begin{minted}[linenos,firstnumber=52]{ruby}
+    File.open("site.cfg", "w+") do |f|
+      f.write <<-EOF.strip_heredoc
+        [blas]
+        blas_libs = cblas, acml
+        library_dirs = #{prefix}/lib
+        include_dirs = #{cblas.prefix}/include
+
+        [lapack]
+        language = f77
+        lapack_libs = acml
+        library_dirs = #{acml_prefix}/lib
+        include_dirs = #{acml_prefix}/include
+
+        [fftw]
+        libraries = fftw3
+        library_dirs = /opt/fftw/3.3.0.1/x86_64/lib
+        include_dirs = /opt/fftw/3.3.0.1/x86_64/include
+      EOF
+    end
+
+    system "cat site.cfg"
+
+    system_python "setup.py build"
+    system_python "setup.py install --prefix=#{prefix} --compile"
+  end
+
+  modulefile do
+    <<-MODULEFILE
+      #%Module
+      proc ModulesHelp { } {
+         puts stderr "<%= @package.name %> <%= @package.version %>"
+         puts stderr ""
+      }
+      # One line description
+      module-whatis "<%= @package.name %> <%= @package.version %>"
+
+      prereq PrgEnv-gnu PE-gnu
+      prereq python
+      conflict python_numpy
+
+      <%= python_module_build_list @package, @builds %>
+      set PREFIX <%= @package.version_directory %>/$BUILD
+
+      set LUSTREPREFIX #{additional_software_roots.first}/#{arch}/<%= @package.name %>/<%= @package.version %>/$BUILD
+
+      prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib
+      prepend-path LD_LIBRARY_PATH $LUSTREPREFIX/lib64
+      prepend-path PYTHONPATH      $LUSTREPREFIX/lib/$LIBDIR/site-packages
+      prepend-path PYTHONPATH      $LUSTREPREFIX/lib64/$LIBDIR/site-packages
+
+      prepend-path PATH            $PREFIX/bin
+      prepend-path LD_LIBRARY_PATH $PREFIX/lib
+      prepend-path LD_LIBRARY_PATH $PREFIX/lib64
+      prepend-path LD_LIBRARY_PATH /opt/gcc/4.8.2/snos/lib64
+      prepend-path LD_LIBRARY_PATH /ccs/compilers/gcc/rhel6-x86_64/4.8.2/lib
+      prepend-path LD_LIBRARY_PATH /ccs/compilers/gcc/rhel6-x86_64/4.8.2/lib64
+      prepend-path MANPATH         $PREFIX/share/man
+
+      prepend-path PYTHONPATH      $PREFIX/lib/$LIBDIR/site-packages
+      prepend-path PYTHONPATH      $PREFIX/lib64/$LIBDIR/site-packages
+    MODULEFILE
+  end
+end
+\end{minted}
+\label{fig:PythonNumpyFormula2}
+\caption{Example Python NumPy Formula (2 of 2)}
+\end{figure*}
 
 \end{document}
