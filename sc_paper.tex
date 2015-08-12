@@ -770,7 +770,17 @@ software installation filesystem is not accessible from our compute nodes.
 
 \subsection{HashDist}
 
-is cool?
+HashDist contains around 450 supported packages at the time of this writing
+including some that support Cray machines.  HashDist makes writing packages (or
+specs) easy by using YAML markup to define how to install a piece of software
+using a defined structure. This has the benefit of not having to learn a new
+programming language only a markup language and the structure HashDist
+expects. The downside is that software specs are more inflexible in their
+decision making than they could be if using a full programming language.
+
+HashDist at this time does not have built in support for modulefiles. It appears
+you can make modulefiles if needed as part of a package spec via shell
+commands but there are no helper functions for this.
 
 \section{Conclusions}
 
