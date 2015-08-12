@@ -37,19 +37,19 @@ Robert D. French\\ %\titlenote{The secretary disavows any knowledge of this auth
        \email{frenchrd@ornl.gov}
 }
 
-\date{8 April 2015}
+\date{12 August 2015}
 
 \maketitle
 
 \begin{abstract}
 
-Smithy is a software compilation and installation tool that borrows ideas
-heavily from SWTools\cite{swtools} and the homebrew\cite{homebrew} package
-management system for Mac OS X.  Smithy is designed to manage many software
-builds within an HPC Linux environment using modulefiles to load software into a
-user's shell.  SWTools has set very good conventions for software installations
-at the NCCS.  Smithy's goal is to make following the SWtools conventions easier
-and less error prone.  Smithy improves upon SWTools by providing a simpler
+Smithy is a software compilation and installation tool that borrows ideas from
+SWTools\cite{swtools} and the homebrew\cite{homebrew} package management system
+for Mac OS X.  Smithy is designed to manage many software builds within an HPC
+Linux environment using modulefiles to load software into a user's shell.
+SWTools has set very good conventions for software installations at the NCCS.
+Smithy's goal is to make following the SWtools conventions easier and less error
+prone.  Smithy replaces SWTools and improves upon it by providing a simpler
 command line interface, modulefile generation and management, and installations
 via formulas written in Ruby.
 
@@ -99,7 +99,7 @@ per platform when necessary.
 Installation is a simple download and extract anywhere affair. Smithy comes
 bundled with its own x86, x86\_64, and Mac OS X builds of Ruby that will run on
 most machines.  See the releases page for download tar files at \\
-\href{http://github.com/AnthonyDiGirolamo/smithy/releases}{github.com/AnthonyDiGirolamo/smithy/releases}
+\href{http://github.com/AnthonyDiGirolamo/smithy/releases}{(github.com/AnthonyDiGirolamo/smithy/releases)}
 
 Smithy is designed to manage many software installations across many hosts and
 architectures. To support this it must be configured via a yaml formatted config
@@ -200,8 +200,14 @@ As the configuration options and strategy for building numpy are largely the
 same between these two cases, the specifics needed to handle each can be
 expressed in conditional blocks if they are simple, or in ``concerns'' if they
 are more complex. This allows the software administrator to maintain portable
-build instructions for dissimilar platforms in a single file. See
-Figure 2 and Figure 3
+build instructions for dissimilar platforms in a single file.
+
+When we say portable we mean that Smithy formulas should be shareable between
+dissimilar architectures (Cray XK7, XE6, and XC-30) as well as related x86-Linux
+clusters. That is, one formula to capture all installation caveats of a package
+within the center.
+
+See Figure 2 and Figure 3
 % Figure~\ref{fig:PythonNumpyFormula1} and Figure~\ref{fig:PythonNumpyFormula2}
 for the complete \texttt{python\_numpy} formula.
 
@@ -213,7 +219,7 @@ or contribute additional improvements upstream.
 
 \subsection{Formula Basics}
 
-Formulas are written as Ruby classes and follow a simple structure.  Formulas
+Formulas are written as Ruby classes and follow a simple structure. They
 provide a domain specific language (DSL) with the support of a full programming
 language. The structure of a formula is the same as a Ruby class. Here is a bare
 minimum example:
@@ -233,7 +239,14 @@ end
 \end{minted}
 \end{quoting}
 
-This formula can be installed by running:
+The above is a working example of a formula written in the Ruby programming
+language. All examples shown are syntactically vaild Ruby. No pseudo code is
+used. The above formula can be installed via the command line by running:
+
+Using the Ruby language to write formulas has been somewhat of a challenge at
+our center. To help address that we have included links and general Ruby
+programming information in the
+\href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html#COMMON-OPERATIONS}{(Smithy formula writing documentation)}.
 
 \begin{quoting}
 \begin{minted}{sh}
@@ -410,7 +423,7 @@ depends_on [ "python/3.3.0",
 This would require a given formula to have access to both
 \texttt{/sw/xk7/python/3.3.0/*} and a python module with a build name that includes
 \texttt{python3.3.0} located at \\
-\texttt{/sw/x6/python\_numpy/1.7.1/*python3.3.0*}
+\texttt{/sw/xk7/python\_numpy/1.7.1/*python3.3.0*}
 
 You may also need to specify dependencies conditionally upon the type of build
 you are performing. If you add the type of build to the \texttt{build\_name}
@@ -692,11 +705,37 @@ if {![info exists BUILD]} {
 
 \section{Similar Efforts}
 
-Smithy is not the only tool aiming to facilitate portable software builds.
-Another fine utility is EasyBuild\cite{EasyBuild}. EasyBuild supports build
-settings for a wide variety of scientific applications, over 500 packages in
-total. The official Smithy formulas repository \\
-\href{http://github.com/AnthonyDiGirolamo/smithy\_formulas}{(github.com/AnthonyDiGirolamo/smithy\_formulas)}
+Smithy is not the only tool aiming to facilitate portable software builds. Some
+other tools include EasyBuild\cite{EasyBuild}, Spack, and HashDist.
+
+\subsection{Smithy's Goals}
+
+Smithy was designed to support building software on Cray systems and related
+clusters. One of the main challenges of supporting software on Cray systems is
+dealing with complex Cray-specific build environments that can require
+cross-compilation and restrict the usage of shared libraries. Another challenge
+is the generation of environment modulefiles that are aware of compiler and MPI
+environments. We have not found this combination of features in other tools.
+
+In our experience, software packages which do not specifically mention Cray
+support do not necessarily build and install correctly without
+modification. This is where using a full programming language such as Ruby helps
+in terms of patching, configuration, or writing out Cray-specific files in a
+readable and organized way. The advantage of using Ruby over markup formats such
+as YAML (as in HashDist) is the ability to make complex choices about how to
+satisfy dependencies at build time. This is also a strength of Spack and
+EasyBuild's use of Python.
+
+It is not clear that other tools such as HashDist or Spack provide tools or DSL
+extensions to allow users to easily target Cray systems or to generate robust
+modulefiles. EasyBuild does have support for modulefile generation, but not
+support for Cray specific build requirements.
+
+\subsection{EasyBuild}
+
+EasyBuild supports a wide variety of scientific applications, over 500 packages
+in total. The Smithy formulas repository \\
+\href{http://github.com/olcf/smithy\_formulas}{(github.com/olcf/smithy\_formulas)}
 contains formulas for over 150 packages written by multiple staff memebers
 including PETSc, OpenMPI, NetCDF, Magma, a large collection of host-native
 Python modules including NumPy and SciPy, as well as several domain-specific
@@ -705,7 +744,33 @@ packages such as LAMMPS, NAMD, and Gromacs.
 While far short of the number boasted by EasyBuild, Smithy formulas excel over
 Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric
 platforms such as Crays, and since formulas are contained in a single file, they
-are much easier to write and maintain.
+are easier to write and maintain.
+
+\subsection{Spack}
+
+Spack is very close to Smithy but implemented in Python. It has a couple
+benefits over Smithy such as auto dependency resolution and pre-bundled formulas
+that are generally installable on most Linux systems. Smithy does not come with
+formulas by default but the NCCS publishes it's formulas at \\
+\href{http://github.com/olcf/smithy\_formulas}{github.com/olcf/smithy\_formulas}.
+contains formulas for over 150 packages written by multiple staff memebers
+Some of the formulas there are very specific to our systems and target Cray
+environments with Nvidia GPUs.
+
+The way Spack solves dependencies between software it builds is through setting
+the RPATH for each binary and library it builds. This approach works well in a
+clustered environment where installed software is accessible by every compute
+node. It also has the benefit of not requiring the user to load environment
+modules that modify the \mintinline{sh}{$PATH} and
+\mintinline{sh}{$LD_LIBRARY_PATH} variables in their shell. The RPATH method
+does not work well for us at the NCCS because often our modulefiles need to make
+decicions about what directory should be added to the
+\mintinline{sh}{$LD_LIBRARY_PATH} depending on the host it is loaded on. Our
+software installation filesystem is not accessible from our compute nodes.
+
+\subsection{HashDist}
+
+is cool?
 
 \section{Conclusions}
 
@@ -717,6 +782,15 @@ within the same center. The concise nature of the Ruby programming language
 allows formula authors to spare themselves the tedium of repetitive software
 build tasks. The formula helper methods provided by the Smithy formula DSL
 facilitate dealing with the caveats of deploying software to these environments.
+
+Formulas are not a new idea in package management, they are similar to Homebrew
+formulas with additional functionality to support HPC specific requirements such
+as multiple compilers and environment modulefiles. They are analogous to Spack's
+packages or EasyBuild's EasyBlocks, with the advantage that all logic needed for
+an installation is contained in a single file. When managing multiple systems of
+varying architectures, with multiple compiler environments per system,
+minimizing the number of files to manage is a boon to the software maintainer's
+sanity.
 
 Although Smithy does not support as many packages as EasyBuild at the time of
 writing, it is the authors' belief that Smithy's ease of adoption and rich
