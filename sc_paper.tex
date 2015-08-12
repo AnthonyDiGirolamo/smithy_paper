@@ -10,7 +10,7 @@
 
 \begin{document}
 
-\title{Improving Software Installation Techniques at the National Center for Computational Sciences at Oak Ridge National Laboratory: The Smithy software installation tool.}
+\title{Improving Software Installation Techniques with Smithy}
 
 % \subtitle{[Extended Abstract]}
 % \titlenote{A full version of this paper is available as
@@ -47,7 +47,8 @@ Smithy is a software compilation and installation tool that borrows ideas from
 SWTools\cite{swtools} and the homebrew\cite{homebrew} package management system
 for Mac OS X.  Smithy is designed to manage many software builds within an HPC
 Linux environment using modulefiles to load software into a user's shell.
-SWTools has set very good conventions for software installations at the NCCS.
+SWTools has set very good conventions for software installations at the National
+Center for Computational Sciences (NCCS).
 Smithy's goal is to make following the SWtools conventions easier and less error
 prone.  Smithy replaces SWTools and improves upon it by providing a simpler
 command line interface, modulefile generation and management, and installations
@@ -600,9 +601,8 @@ The modulefile definition uses the \href{http://ruby-doc.org/stdlib-2.0/libdoc/e
 format}. Anything
 between the \mintinline{erb}{<%= ... %>} delimiters will be interpreted as ruby code. There are
 a few helper methods that you can use inside these delimiters see the
-\href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html}{Modulefile
-Helper Methods section of the smithyformula manpage}.
-Modulefile Helper Methods section of the smithyformula manpage for details.
+\href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html}{``Modulefile
+Helper Methods'' section of the smithyformula manpage}.
 
 A more complicated modulefile may examine a user's programming environment to
 determine which build to load. For instance if the user has gcc or a gnu
@@ -663,18 +663,21 @@ method. Otherwise, if we have only one build, \mintinline{erb}{set PREFIX <%= @p
 
 This is a helper method that will generate the TCL necessary to conditionally
 load builds based on what compiler programming environment modules a user has
-loaded. It takes \texttt{@package} and \texttt{@builds} as arguments. Here is
-an example of the output generated for a package installed with the following
-builds:
+loaded. It takes \texttt{@package} and \texttt{@builds} as arguments.
+For example, building the package ``bzip2'' for the GNU, PGI, and Intel compiler
+environments with the following builds
 
 \begin{quoting}[leftmargin=0pt]
 \begin{minted}{sh}
-smithy formula install bzip2/1.0.4/gnu4.3.4
-smithy formula install bzip2/1.0.4/gnu4.7.2
-smithy formula install bzip2/1.0.4/pgi13.4
-smithy formula install bzip2/1.0.4/intel12
+$ smithy formula install bzip2/1.0.4/gnu4.3.4
+$ smithy formula install bzip2/1.0.4/gnu4.7.2
+$ smithy formula install bzip2/1.0.4/pgi13.4
+$ smithy formula install bzip2/1.0.4/intel12
 \end{minted}
 \end{quoting}
+
+will generate the following TCL conditional to load the correct build for the
+currently loaded compiler environment:
 
 \begin{quoting}[leftmargin=0pt]
 \begin{minted}{tcl}
@@ -706,7 +709,8 @@ if {![info exists BUILD]} {
 \section{Similar Efforts}
 
 Smithy is not the only tool aiming to facilitate portable software builds. Some
-other tools include EasyBuild\cite{EasyBuild}, Spack, and HashDist.
+other tools include EasyBuild\cite{EasyBuild}, Spack\cite{spack}, and
+HashDist\cite{hashdist}.
 
 \subsection{Smithy's Goals}
 
@@ -726,10 +730,8 @@ as YAML (as in HashDist) is the ability to make complex choices about how to
 satisfy dependencies at build time. This is also a strength of Spack and
 EasyBuild's use of Python.
 
-It is not clear that other tools such as HashDist or Spack provide tools or DSL
-extensions to allow users to easily target Cray systems or to generate robust
-modulefiles. EasyBuild does have support for modulefile generation, but not
-support for Cray specific build requirements.
+HashDist and Spack do not support modulefile generation. EasyBuild does, but it
+does not provide support for Cray-specific build requirements.
 
 \subsection{EasyBuild}
 
@@ -748,39 +750,23 @@ are easier to write and maintain.
 
 \subsection{Spack}
 
-Spack is very close to Smithy but implemented in Python. It has a couple
-benefits over Smithy such as auto dependency resolution and pre-bundled formulas
-that are generally installable on most Linux systems. Smithy does not come with
-formulas by default but the NCCS publishes it's formulas at \\
-\href{http://github.com/olcf/smithy\_formulas}{github.com/olcf/smithy\_formulas}.
-contains formulas for over 150 packages written by multiple staff memebers
-Some of the formulas there are very specific to our systems and target Cray
-environments with Nvidia GPUs.
-
-The way Spack solves dependencies between software it builds is through setting
-the RPATH for each binary and library it builds. This approach works well in a
-clustered environment where installed software is accessible by every compute
-node. It also has the benefit of not requiring the user to load environment
-modules that modify the \mintinline{sh}{$PATH} and
-\mintinline{sh}{$LD_LIBRARY_PATH} variables in their shell. The RPATH method
-does not work well for us at the NCCS because often our modulefiles need to make
-decicions about what directory should be added to the
-\mintinline{sh}{$LD_LIBRARY_PATH} depending on the host it is loaded on. Our
-software installation filesystem is not accessible from our compute nodes.
+Spack provides similar capabilities to Smithy, but is implemented in Python. It
+also boasts some features not available in Smithy such as
+auto dependency resolution and pre-bundled formulas
+that are generally installable on most Linux systems. In general, Smithy
+formulas are geared towards handling the caveats that arise on niche systems
+such as large Crays.
 
 \subsection{HashDist}
 
 HashDist contains around 450 supported packages at the time of this writing
 including some that support Cray machines.  HashDist makes writing packages (or
-specs) easy by using YAML markup to define how to install a piece of software
-using a defined structure. This has the benefit of not having to learn a new
-programming language only a markup language and the structure HashDist
-expects. The downside is that software specs are more inflexible in their
-decision making than they could be if using a full programming language.
-
-HashDist at this time does not have built in support for modulefiles. It appears
-you can make modulefiles if needed as part of a package spec via shell
-commands but there are no helper functions for this.
+``specs'') easy by using YAML markup to define how to install a piece of software
+using a defined structure. This approach may seem attractive, but given the
+detailed knowledge of HashDist's capabilities required to write effective
+packages, the
+flexibility provided by using a full-featured programming language allows Smithy
+to handle edge cases more gracefully.
 
 \section{Conclusions}
 
