@@ -27,7 +27,7 @@ Anthony DiGirolamo\\ %\titlenote{Dr.~Trovato insisted his name be first.}\\
        \affaddr{Oak Ridge National Laboratory}\\
        \affaddr{1 Bethel Valley Rd}\\
        \affaddr{Oak Ridge, TN USA}\\
-       \email{lmd@ornl.gov}
+       \email{anthonyd@ornl.gov}
 \alignauthor
 Robert D. French\\ %\titlenote{The secretary disavows any knowledge of this author's actions.}\\
        \affaddr{National Center for Computational Sciences}\\
@@ -81,7 +81,7 @@ the configuration of a build could be kept in \textit{rebuild scripts} that
 would house the information necessary to recompile and reinstall a package.
 However, SWTools is very specific in its aims: a single rebuild script supports
 one set of configuration options for a particular platform. This can be a
-hindrance, for example, for packages like Python Numpy, which can target
+hindrance, for example, for packages like Python NumPy, which can target
 multiple major versions of Python (2.X and 3.X) as well as multiple BLAS
 implementations.  Supporting all combinations of Python and BLAS for a single
 compute resource can require many rebuild scripts, each very similar.
@@ -202,7 +202,7 @@ expressed in conditional blocks if they are simple, or in ``concerns'' if they
 are more complex. This allows the software administrator to maintain portable
 build instructions for dissimilar platforms in a single file.
 
-When we say portable we mean that Smithy formulas should be shareable between
+When we say portable we mean that Smithy formulas should be share-able between
 dissimilar architectures (Cray XK7, XE6, and XC-30) as well as related x86-Linux
 clusters. That is, one formula to capture all installation caveats of a package
 within the center.
@@ -240,7 +240,7 @@ end
 \end{quoting}
 
 The above is a working example of a formula written in the Ruby programming
-language. All examples shown are syntactically vaild Ruby. No pseudo code is
+language. All examples shown are syntactically valid Ruby. No pseudo code is
 used. The above formula can be installed via the command line by running:
 
 Using the Ruby language to write formulas has been somewhat of a challenge at
@@ -737,35 +737,33 @@ does not provide support for Cray-specific build requirements.
 EasyBuild supports a wide variety of scientific applications, over 500 packages
 in total. The Smithy formulas repository \\
 \href{http://github.com/olcf/smithy\_formulas}{(github.com/olcf/smithy\_formulas)}
-contains formulas for over 150 packages written by multiple staff memebers
+contains formulas for over 150 packages written by multiple staff members
 including PETSc, OpenMPI, NetCDF, Magma, a large collection of host-native
 Python modules including NumPy and SciPy, as well as several domain-specific
 packages such as LAMMPS, NAMD, and Gromacs.
 
 While far short of the number boasted by EasyBuild, Smithy formulas excel over
-Easybuild's ``easyblocks'' in two regards: they emphasize support for esoteric
+EasyBuild's ``easyblocks'' in two regards: they emphasize support for esoteric
 platforms such as Crays, and since formulas are contained in a single file, they
 are easier to write and maintain.
 
 \subsection{Spack}
 
 Spack provides similar capabilities to Smithy, but is implemented in Python. It
-also boasts some features not available in Smithy such as
-auto dependency resolution and pre-bundled formulas
-that are generally installable on most Linux systems. In general, Smithy
-formulas are geared towards handling the caveats that arise on niche systems
-such as large Crays.
+also boasts some features not available in Smithy such as auto dependency
+resolution and pre-bundled formulas that are generally installable on most Linux
+systems. In general, Smithy formulas are geared towards handling the caveats
+that arise on niche systems such as large Crays.
 
 \subsection{HashDist}
 
 HashDist contains around 450 supported packages at the time of this writing
 including some that support Cray machines.  HashDist makes writing packages (or
-``specs'') easy by using YAML markup to define how to install a piece of software
-using a defined structure. This approach may seem attractive, but given the
-detailed knowledge of HashDist's capabilities required to write effective
-packages, the
-flexibility provided by using a full-featured programming language allows Smithy
-to handle edge cases more gracefully.
+``specs'') easy by using YAML markup to define how to install a piece of
+software using a defined structure. This approach may seem attractive, but given
+the detailed knowledge of HashDist's capabilities required to write effective
+packages, the flexibility provided by using a full-featured programming language
+allows Smithy to handle edge cases more gracefully.
 
 \section{Conclusions}
 
