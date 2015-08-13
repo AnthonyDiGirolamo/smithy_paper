@@ -88,21 +88,22 @@ compute resource can require many rebuild scripts, each very similar.
 
 Smithy improves over SWTools primarily in this regard. Drawing inspiration from
 Homebrew\cite{homebrew}, a package manager for Mac OS X, Smithy encapsulates
-everything necessary for reproducible builds in a single ruby program called a
+everything necessary for reproducible builds in a single Ruby program called a
 ``formula''. Formulas can be written in a generalized fashion to support
 multiple software versions or build platforms; they can also be extended using
-ruby's ``concerns'' mechanism to support separate configurations per version or
+Ruby's ``concerns'' mechanism to support separate configurations per version or
 per platform when necessary.
 
 \section{Installation and Configuration}
 
 Installation is a simple download and extract anywhere affair. Smithy comes
-bundled with its own x86, x86\_64, and Mac OS X builds of Ruby that will run on
+bundled with its own x86, x86\_64, and Mac OS X builds of Ruby provided by
+Traveling Ruby\cite{TravelingRuby} that will run on
 most machines.  See the releases page for download tar files at \\
 \href{http://github.com/AnthonyDiGirolamo/smithy/releases}{(github.com/AnthonyDiGirolamo/smithy/releases)}
 
 Smithy is designed to manage many software installations across many hosts and
-architectures. To support this it must be configured via a yaml formatted config
+architectures. To support this it must be configured via a YAML formatted config
 file. As an example:
 
 \begin{quoting}
@@ -120,13 +121,13 @@ download-cache: /sw/sources
 \end{minted}
 \end{quoting}
 
-The above lines and many more configuration options are documented on the smithy
+The above lines and many more configuration options are documented on the Smithy
 manpage at \\
 \href{http://anthonydigirolamo.github.io/smithy/smithy.1.html}{(anthonydigirolamo.github.io/smithy/smithy.1.html)}.
-Notable are the \texttt{software-root} and \texttt{hostname-architectures}
+Notable items are the \texttt{software-root} and \texttt{hostname-architectures}
 options. \texttt{software-root} is the root directory where all software will be
 installed. \texttt{hostname-architectures} maps machine hostnames to specific
-architecture directory names. For example when smithy is run on a machine with
+architecture directory names. For example, when smithy is run on a machine with
 the hostname \texttt{titan-ext1} it will place installations within the
 \texttt{/sw/xk7} directory.
 
@@ -137,9 +138,9 @@ They can manipulate the programming environment and load or unload modules as
 appropriate. Formulas can express dependency requirements, and even generate
 modulefiles for newly installed packages.
 
-Formulas are installed with an SWTools target name. Targets are formatted as
+Formulas are installed with a SWTools target name. Targets are formatted as
 \texttt{name/version/build\_name} and correspond to the directory structure used
-to install the software on the filesystem.  For example a target can be
+to install the software on the filesystem.  For example, a target can be
 specified such as:
 
 \begin{quoting}
@@ -196,7 +197,7 @@ Which corresponds to the following directory structure:
 Smithy will invoke the same \texttt{python\_numpy} formula as before, but this
 time targeting RHEL 6.5 and the Intel Math Kernel Library.
 
-As the configuration options and strategy for building numpy are largely the
+As the configuration options and strategies for building NumPy are largely the
 same between these two cases, the specifics needed to handle each can be
 expressed in conditional blocks if they are simple, or in ``concerns'' if they
 are more complex. This allows the software administrator to maintain portable
@@ -211,8 +212,8 @@ See Figure 2 and Figure 3
 % Figure~\ref{fig:PythonNumpyFormula1} and Figure~\ref{fig:PythonNumpyFormula2}
 for the complete \texttt{python\_numpy} formula.
 
-A further advantage of Smithy formulas over SWTools rebuild scripts, inspired by
-Homebrew formulas, is that they can be shared through public version-control
+A further advantage of Smithy formulas over SWTools rebuild scripts
+is that they can be shared through public version-control
 hosting sites such as GitHub. HPC centers can choose to maintain their own
 formulas, pull changes downstream from the official Smithy formulas repository,
 or contribute additional improvements upstream.
@@ -241,12 +242,12 @@ end
 
 The above is a working example of a formula written in the Ruby programming
 language. All examples shown are syntactically valid Ruby. No pseudo code is
-used. The above formula can be installed via the command line by running:
-
-Using the Ruby language to write formulas has been somewhat of a challenge at
+used. Using the Ruby language to write formulas has been somewhat of a challenge at
 our center. To help address that we have included links and general Ruby
 programming information in the
 \href{http://anthonydigirolamo.github.io/smithy/smithyformula.5.html#COMMON-OPERATIONS}{(Smithy formula writing documentation)}.
+
+The above formula can be installed via the command line by running:
 
 \begin{quoting}
 \begin{minted}{sh}
@@ -303,7 +304,7 @@ end
 
 Any formula DSL method can be overridden including \texttt{def install}.
 
-Here is an example of a python formula that supports version ``2.7.9'' and
+Here is an example of a Python formula that supports version ``2.7.9'' and
 ``3.4.3''. This example only overrides the download url and md5.
 
 \begin{quoting}
@@ -345,7 +346,7 @@ end
 \end{minted}
 \end{quoting}
 
-Using the above formula it is possible to install python with the following and
+Using the above formula it is possible to install Python with the following and
 smithy will download the correct tarball for each version:
 
 \begin{quoting}
@@ -374,9 +375,9 @@ depends_on [
 \end{quoting}
 
 Using this method ensures that if a given dependency is not met smithy will
-abort the installation. It also provides a way to query dependent packages
+abort the installation. It also provides a way to query dependent package
 information within the install method later on. For example if you write
-\texttt{depends\_on "curl"} in your formula you gain access to an object named curl
+\mintinline{ruby}{depends_on "curl"} in your formula you gain access to an object named curl
 inside the install method. This allows you to do things like:
 
 \begin{quoting}
@@ -386,14 +387,14 @@ system "./configure --prefix=#{prefix}",
 \end{minted}
 \end{quoting}
 
-In the above example \texttt{\#\{curl.prefix\}} is an example of a ruby
-interpolated string, everything between the \texttt{\#\{ \}} is ruby code.
+In the above example \mintinline{ruby}{"#{curl.prefix}"} is an example of a ruby
+interpolated string, everything between the \texttt{\#\{ \}} is Ruby code.
 \texttt{curl.prefix} will return a string with the location curl is installed
 in.
 
 The strings passed to \texttt{depends\_on} are just the locations of installed
-software.  If you required a specific version of a dependency you could
-specify the version or build numbers of existing installed software. For
+software.  If you require a specific version of a dependency you could
+specify the version or build names of existing installed software. For
 example:
 
 \begin{quoting}
@@ -409,8 +410,8 @@ Assuming your software root is \texttt{/sw/xk7} smithy would look for the above
 software installs in \\
 \texttt{/sw/xk7/cmake/2.8.11.2/sles11.1\_gnu4.3.4}, \\
 ~\texttt{/sw/xk7/qt/4.8.5/*}, and \texttt{/sw/xk7/sqlite/*/*}. The wildcard
-\texttt{*} works similar to shell globbing. If you needed to install a python
-module that depends on a specific version of another python module you might
+\texttt{*} works similar to shell globbing. If you needed to install a Python
+module that depends on a specific version of another Python module you might
 use:
 
 \begin{quoting}
@@ -421,15 +422,15 @@ depends_on [ "python/3.3.0",
 \end{quoting}
 
 This would require a given formula to have access to both
-\texttt{/sw/xk7/python/3.3.0/*} and a python module with a build name that includes
+\texttt{/sw/xk7/python/3.3.0/*} and a python NumPy install with a build name that includes
 \texttt{python3.3.0} located at \\
 \texttt{/sw/xk7/python\_numpy/1.7.1/*python3.3.0*}
 
 You may also need to specify dependencies conditionally upon the type of build
 you are performing. If you add the type of build to the \texttt{build\_name}
-when installing you can key off that to specify dependencies. Taking the python
-example further, lets extend it to support multiple versions of python. You can
-pass a ruby block to the \texttt{depends\_on} method to make it more dynamic.
+when installing you can key off that to specify dependencies. Taking the Python
+example further, lets extend it to support multiple versions of Python. You can
+pass a Ruby block to the \texttt{depends\_on} method to make it more dynamic.
 The syntax for this is:
 
 \begin{quoting}
@@ -440,8 +441,8 @@ end
 \end{minted}
 \end{quoting}
 
-Any ruby code may go in here the last executed line of the block should be an
-array of strings containing the dependencies. Lets use a ruby case statement
+Any Ruby code may go into the block, and the last line of the block should be an
+array of strings containing the dependencies. Lets use a Ruby case statement
 for this:
 
 \begin{quoting}
@@ -461,10 +462,10 @@ end
 
 In this example case statement switches on the \texttt{build\_name}. The
 \texttt{when /python3.3/} will be true if the \texttt{build\_name} contains the
-\texttt{python3.3}. The
+string \texttt{python3.3}. The
 \texttt{/python3.3/} syntax is a regular expression.
 
-This allows the formula to set it's dependencies based off the type of build
+This allows the formula to set its dependencies based off the type of build
 thats being performed. Lets say this formula is \texttt{python\_matplotlib}. You could
 run either of these commands to install it and expect the dependencies to be set
 correctly:
@@ -517,7 +518,7 @@ end
 \end{quoting}
 
 This can be used to dynamically set which modules to load based on the
-\texttt{build\_name}. Here is an example that loads the correct python version:
+\texttt{build\_name}. Here is an example that loads the correct Python version:
 
 \begin{quoting}
 \begin{minted}{ruby}
@@ -541,10 +542,10 @@ end
 
 This block starts by creating a variable named \texttt{commands} as an array with a
 single item \texttt{"unload python"}. Next a case statement is used to determine which
-version of python we are compiling for. \mintinline{ruby}{commands << "load python/3.3.0"} will
+version of Python we are compiling for. \mintinline{ruby}{commands << "load python/3.3.0"} will
 append \texttt{"load python/3.3.0"} to the end of the array.  After that, it appends a
 few more modules to load.  The last line of the block must be the array itself
-so that when the block is evaluated by smithy, it recieves the expected value.
+so that when the block is evaluated by Smithy, it recieves the expected value.
 
 Assuming this is a formula for \texttt{python\_h5py} running \texttt{smithy
 formula install python\_h5py/2.1.3/python3.3} results in an array containing:
@@ -562,14 +563,14 @@ formula install python\_h5py/2.1.3/python3.3} results in an array containing:
 \subsubsection{\texttt{modulefile}}
 
 The modulefile command provides a way to define a complete modulefile within the
-formula itself. It's recommended to have one modulefile per application and version combination.
+formula itself. It is recommended to have one modulefile per application and version combination.
 
 Writing modulefiles is a topic in and of itself. For details on the modulefile
 format see the
 \href{http://modules.sourceforge.net/man/modulefile.html}{modulefile manpage}
-Modulefiles are written in tcl and can take many forms.
+Modulefiles are written in TCL and can take many forms.
 
-Here is an example of a modulefile that points to a single build:
+Here is an example of a modulefile defined in a Smithy formula that points to a single build:
 
 \begin{quoting}[leftmargin=0pt]
 \begin{minted}{ruby}
@@ -604,9 +605,9 @@ a few helper methods that you can use inside these delimiters see the
 Helper Methods'' section of the smithyformula manpage}.
 
 A more complicated modulefile may examine a user's programming environment to
-determine which build to load. For instance if the user has gcc or a gnu
+determine which build to load. For instance if the user has GCC or a GNU
 programming environment module loaded then your modulefile will want to load the
-build compiled with the gcc compiler.  Here is an example designed to
+build compiled with the GCC compiler.  Here is an example designed to
 dynamically set the build:
 
 \begin{quoting}[leftmargin=0pt]
@@ -649,7 +650,7 @@ prepend-path PKG_CONFIG_PATH $PREFIX/lib/pkgconfig
 
 The main difference from the first example is the \\
 \mintinline{erb}{<%= if @builds.size > 1 %>}
-block. This basically checks to see if we have installed multiple builds or
+condition. This basically checks to see if we have installed multiple builds or
 not. If that condition is true everything up until the
 \mintinline{erb}{<% else %>}
 will be put
@@ -713,7 +714,7 @@ HashDist\cite{hashdist}.
 
 \subsection{Smithy's Goals}
 
-Smithy was designed to support building software on Cray systems and related
+Smithy was designed to support building software on Cray systems and Linux
 clusters. One of the main challenges of supporting software on Cray systems is
 dealing with complex Cray-specific build environments that can require
 cross-compilation and restrict the usage of shared libraries. Another challenge
@@ -729,8 +730,8 @@ as YAML (as in HashDist) is the ability to make complex choices about how to
 satisfy dependencies at build time. This is also a strength of Spack and
 EasyBuild's use of Python.
 
-HashDist and Spack do not support modulefile generation. EasyBuild does, but it
-does not provide support for Cray-specific build requirements.
+HashDist and Spack do not support modulefile generation at the time of this writing. EasyBuild
+does, but it does not provide support for Cray-specific programming environment quirks.
 
 \subsection{EasyBuild}
 
@@ -760,9 +761,9 @@ that arise on niche systems such as large Crays.
 HashDist contains around 450 supported packages at the time of this writing
 including some that support Cray machines.  HashDist makes writing packages (or
 ``specs'') easy by using YAML markup to define how to install a piece of
-software using a defined structure. This approach may seem attractive, but given
-the detailed knowledge of HashDist's capabilities required to write effective
-packages, the flexibility provided by using a full-featured programming language
+software using a defined structure. This approach may seem attractive, but requires
+detailed knowledge of HashDist's capabilities to write effective
+packages. The flexibility provided by using a full-featured programming language
 allows Smithy to handle edge cases more gracefully.
 
 \section{Conclusions}
@@ -770,7 +771,7 @@ allows Smithy to handle edge cases more gracefully.
 Smithy formulas provide a self-contained encapsulation of all logic necessary to
 build multiple versions of a scientific software package for various resources,
 operating systems, and programming environments. A software administrator
-employing smithy can support build requests for many disparate compute resources
+employing Smithy can support build requests for many disparate compute resources
 within the same center. The concise nature of the Ruby programming language
 allows formula authors to spare themselves the tedium of repetitive software
 build tasks. The formula helper methods provided by the Smithy formula DSL
@@ -799,7 +800,7 @@ Science's Advanced Scientific Computing Research program.
 
 The Smithy Homepage
 \href{http://anthonydigirolamo.github.io/smithy/}{(anthonydigirolamo.github.io/smithy)}
-has information on installing, configuring and running smithy on your system. In
+has information on installing, configuring and running Smithy on your system. In
 addition there are two in depth manpages that cover using smithy on the command
 line
 \href{http://anthonydigirolamo.github.io/smithy/smithy.1.html}{(anthonydigirolamo.github.io/smithy/smithy.1.html)}
